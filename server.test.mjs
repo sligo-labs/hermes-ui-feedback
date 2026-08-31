@@ -3,6 +3,7 @@ import test from "node:test";
 
 import {
   buildDiscordContent,
+  createFeedbackServer,
   loadProjects,
   resolveProject,
   validateSubmission,
@@ -49,4 +50,16 @@ test("builds one safe human summary and rejects invalid screenshots", () => {
     () => validateSubmission({ ...valid, screenshot: "data:image/png;base64,aGVsbG8=" }),
     /valid PNG/,
   );
+});
+
+test("completes Chrome's Cloudflare authentication flow", async () => {
+  const { server } = createFeedbackServer({ port: 43129 });
+  await new Promise((resolve) => server.listen(43129, "127.0.0.1", resolve));
+  try {
+    const response = await fetch("http://127.0.0.1:43129/auth", { redirect: "manual" });
+    assert.equal(response.status, 302);
+    assert.equal(response.headers.get("location"), "https://mjdomngjkjjpfadhlhcobkefhdfgfdkp.chromiumapp.org/");
+  } finally {
+    await new Promise((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
+  }
 });

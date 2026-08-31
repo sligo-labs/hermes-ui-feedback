@@ -12,6 +12,7 @@ const DEFAULT_PORT = 43127;
 const MAX_BODY_BYTES = 12 * 1024 * 1024;
 const MAX_SCREENSHOT_BYTES = 8 * 1024 * 1024;
 const EXTENSION_ORIGIN = "chrome-extension://mjdomngjkjjpfadhlhcobkefhdfgfdkp";
+const EXTENSION_AUTH_REDIRECT = "https://mjdomngjkjjpfadhlhcobkefhdfgfdkp.chromiumapp.org/";
 
 export function validateSubmission(value) {
   if (!value || typeof value !== "object") throw new Error("Invalid feedback payload.");
@@ -124,6 +125,9 @@ export function createFeedbackServer({
     const url = new URL(request.url ?? "/", `http://127.0.0.1:${port}`);
     if (request.method === "GET" && url.pathname === "/") {
       return json(response, 200, { ok: true, projects: config.projects.map((project) => project.name) });
+    }
+    if (request.method === "GET" && url.pathname === "/auth") {
+      return response.writeHead(302, { location: EXTENSION_AUTH_REDIRECT }).end();
     }
     if (request.method !== "POST" || url.pathname !== "/api/feedback") {
       return json(response, 404, { error: "Not found." });

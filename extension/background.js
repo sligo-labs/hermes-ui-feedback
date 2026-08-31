@@ -55,6 +55,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 });
 
 async function request(path, init = {}) {
+  await authenticate();
   const response = await fetch(`${BRIDGE}${path}`, {
     ...init,
     credentials: "include",
@@ -66,10 +67,19 @@ async function request(path, init = {}) {
   return value;
 }
 
-function errorMessage(error) {
-  if (error instanceof TypeError) {
-    void chrome.tabs.create({ url: `${BRIDGE}/` });
-    return "Sign in to Sligo Access in the new tab, then return here and send again.";
+async function authenticate() {
+  const details = { url: `${BRIDGE}/auth`, interactive: false };
+  try {
+    await chrome.identity.launchWebAuthFlow(details);
+  } catch {
+    try {
+      await chrome.identity.launchWebAuthFlow({ ...details, interactive: true });
+    } catch {
+      throw new Error("Sligo Access authorization was not completed.");
+    }
   }
+}
+
+function errorMessage(error) {
   return error instanceof Error ? error.message : String(error);
 }
