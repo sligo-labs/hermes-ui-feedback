@@ -1,21 +1,28 @@
 # Hermes UI Feedback
 
-Annotate any web page, batch spatial comments, and hand one bounded implementation task to Hermes. The target project needs no integration and the tool has no runtime dependencies.
+Point at any configured web UI, leave spatial notes, and send one visible implementation request to its Hermes Discord project. The target application needs no integration and the extension has no runtime dependencies.
 
-## Use it
+## Try it
 
-1. Open `chrome://extensions`, enable **Developer mode**, choose **Load unpacked**, and select this repository's `extension/` directory.
-2. In a terminal, enter the development worktree Hermes should edit and run:
+1. Download and unzip the latest extension release.
+2. Open `chrome://extensions`, enable **Developer mode**, choose **Load unpacked**, and select the unzipped `extension/` directory.
+3. Open a configured page and click **Hermes UI Feedback**.
+4. Click elements, add notes, review the batch, and choose **Send to Hermes**.
 
-   ```sh
-   node /absolute/path/to/hermes-ui-feedback/server.mjs
-   ```
+If Sligo Access opens, sign in once, return to the page, and send again. The panel links to the resulting Discord thread.
 
-3. Open the page you want to review and click the **Hermes UI Feedback** extension icon.
-4. Click elements, write notes, review the batch, then choose **Send to Hermes**.
+## How it routes
 
-The bridge binds only to `127.0.0.1:43127` and accepts browser requests only from this extension's fixed ID. It accepts one job at a time, invokes `hermes` without a shell, attaches a clean screenshot of the visible page, and tells Hermes to edit and verify locally without committing, pushing, deploying, merging, or messaging externally.
+The extension sends the visible screenshot plus bounded DOM context to `feedback.sligolabs.com`. The authenticated service maps the page hostname through `projects.json` and posts one human-readable message with `feedback.json` and `screenshot.png` through that project's existing Discord webhook identity. The message mentions Hermes V2, so normal Discord routing owns the session, worktree, progress, steering, and delivery.
 
-Use `--cwd /path/to/worktree`, `--port 43127`, or `--hermes /path/to/hermes` when the defaults do not fit. If the port changes, update `BRIDGE` and `host_permissions` in the extension.
+- Production host: post in the project's parent channel and let Hermes create a thread.
+- Preview host: search recent project threads for the exact preview origin and post there; fall back to a new thread when no match is found.
+- Unknown host: reject it until an operator adds a project mapping.
 
-Notes survive reloads for the life of the browser session. Full browser navigation may require clicking the extension icon again.
+The service strips input values, inline event handlers, `srcdoc`, and nonces from captured element HTML. Discord webhook URLs stay server-side and are never included in the extension or repository.
+
+## Add a project
+
+Add one entry to `projects.json` with production hostnames, optional preview-host regular expressions, the Discord parent channel, and the environment-variable name containing its webhook URL. Restart the service after changing the file.
+
+The server uses only Node.js built-ins and the installed read-only `hermes discord` CLI for preview-thread lookup.

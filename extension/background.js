@@ -1,4 +1,4 @@
-const BRIDGE = "http://127.0.0.1:43127";
+const BRIDGE = "https://feedback.sligolabs.com";
 
 chrome.action.onClicked.addListener(async (tab) => {
   if (tab.id == null || !/^https?:/.test(tab.url ?? "")) return;
@@ -37,13 +37,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           sender.tab.windowId,
           { format: "png" },
         );
-        return request("/jobs", {
+        return request("/api/feedback", {
           method: "POST",
           body: JSON.stringify({ ...message.payload, screenshot }),
         });
       }
-      case "job-status":
-        return request(`/jobs/${encodeURIComponent(message.id)}`);
       default:
         return { error: "Unknown extension message." };
     }
@@ -59,7 +57,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 async function request(path, init = {}) {
   const response = await fetch(`${BRIDGE}${path}`, {
     ...init,
-    headers: { "content-type": "application/json", ...init.headers },
+    credentials: "include",
   });
   const value = await response.json().catch(() => ({}));
   if (!response.ok) {
@@ -70,7 +68,8 @@ async function request(path, init = {}) {
 
 function errorMessage(error) {
   if (error instanceof TypeError) {
-    return "Hermes bridge is offline. Start hermes-ui-feedback in your worktree.";
+    void chrome.tabs.create({ url: `${BRIDGE}/` });
+    return "Sign in to Sligo Access in the new tab, then return here and send again.";
   }
   return error instanceof Error ? error.message : String(error);
 }

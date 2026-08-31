@@ -1,0 +1,13 @@
+{
+  "botId": "1535453212637667368",
+  "guildId": "1502787243230756904",
+  "projects": [
+    {
+      "name": "PID Chatbot",
+      "productionHosts": ["pid-chatbot.sligolabs.com"],
+      "previewHostPatterns": ["^pid(?:-chatbot)?-git-[a-z0-9-]+-sligo-labs\\.vercel\\.app$"],
+      "discordParentChannelId": "1539490801640284200",
+      "webhookEnv": "PID_CHATBOT_DISCORD_WEBHOOK_URL"
+    }
+  ]
+}

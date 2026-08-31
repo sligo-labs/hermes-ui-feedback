@@ -10,9 +10,10 @@
     notes: [],
     hovered: null,
     draft: null,
-    jobId: null,
     busy: false,
+    submitted: false,
     result: "",
+    resultUrl: "",
     error: "",
   };
 
@@ -50,7 +51,8 @@
       .panel-actions { display: flex; align-items: center; justify-content: flex-end; gap: 7px; padding: 10px 12px; border-top: 1px solid #263247; }
       .status { flex: 1; color: #94a3b8; font-size: 11px; }
       .error { margin: 0; padding: 10px 12px; border-top: 1px solid #7f1d1d; background: #2a1118; color: #fecaca; white-space: pre-wrap; }
-      .result { max-height: 220px; margin: 0; overflow: auto; padding: 11px 12px; border-top: 1px solid #14532d; background: #0c1f19; color: #bbf7d0; font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; white-space: pre-wrap; }
+      .result { margin: 0; padding: 11px 12px; border-top: 1px solid #14532d; background: #0c1f19; color: #bbf7d0; font-size: 12px; white-space: pre-wrap; }
+      .result-link { display: inline-block; margin-top: 5px; color: #7dd3fc; font-weight: 700; text-decoration: underline; }
       .composer { position: fixed; width: min(350px, calc(100vw - 24px)); padding: 10px; border: 1px solid #38bdf8; border-radius: 7px; background: #0b1220; box-shadow: 0 14px 40px rgb(2 8 23 / 65%); pointer-events: auto; }
       .composer-label { display: block; margin-bottom: 7px; color: #94a3b8; font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
       textarea { display: block; width: 100%; min-height: 92px; resize: vertical; padding: 9px 10px; border: 1px solid #475569; border-radius: 5px; background: #111c2e; color: #f8fafc; }
@@ -64,7 +66,7 @@
         <div class="panel-header"><h2>Hermes feedback</h2><span class="count-label"></span></div>
         <div class="notes-wrap"></div>
         <p class="error hidden" role="alert"></p>
-        <pre class="result hidden"></pre>
+        <div class="result hidden"><span class="result-text"></span><br><a class="result-link" target="_blank" rel="noreferrer">Open Discord thread</a></div>
         <div class="panel-actions">
           <span class="status">Click Annotate, then choose an element.</span>
           <button class="clear" type="button">Clear</button>
@@ -96,6 +98,8 @@
   const status = $(".status");
   const errorBox = $(".error");
   const resultBox = $(".result");
+  const resultText = $(".result-text");
+  const resultLink = $(".result-link");
   const composer = $(".composer");
   const composerLabel = $(".composer-label");
   const textarea = $("textarea");
@@ -170,6 +174,7 @@
       message: message.slice(0, 2000),
       ...state.draft.context,
     });
+    markDirty();
     cancelDraft();
     persist();
     render();
@@ -177,6 +182,7 @@
 
   function removeNote(id) {
     state.notes = state.notes.filter((note) => note.id !== id);
+    markDirty();
     persist();
     render();
   }
@@ -184,17 +190,17 @@
   function clearNotes() {
     if (state.busy || !state.notes.length) return;
     state.notes = [];
-    state.result = "";
-    state.error = "";
+    markDirty();
     persist();
     render();
   }
 
   async function send() {
-    if (state.busy || !state.notes.length) return;
+    if (state.busy || state.submitted || !state.notes.length) return;
     state.busy = true;
     state.error = "";
     state.result = "";
+    state.resultUrl = "";
     render();
 
     let response;
@@ -221,50 +227,36 @@
       render();
       return;
     }
-    state.jobId = response.id;
-    pollJob();
+    state.busy = false;
+    state.submitted = true;
+    state.resultUrl = response.permalink;
+    state.result = response.routedTo === "preview-thread"
+      ? "Sent to the existing preview thread."
+      : "Sent to Discord. Hermes V2 is opening a new thread.";
+    setAnnotating(false);
+    render();
   }
 
-  async function pollJob() {
-    if (!state.jobId) return;
-    let response;
-    try {
-      response = await chrome.runtime.sendMessage({
-        type: "job-status",
-        id: state.jobId,
-      });
-    } catch (error) {
-      response = { error: error instanceof Error ? error.message : String(error) };
-    }
-    if (response?.error) {
-      state.busy = false;
-      state.error = response.error;
-      render();
-      return;
-    }
-    if (response.status === "running") {
-      status.textContent = "Hermes is implementing the feedback…";
-      setTimeout(pollJob, 1500);
-      return;
-    }
-    state.busy = false;
-    state.jobId = null;
-    if (response.status === "complete") state.result = response.output || "Hermes finished.";
-    else state.error = response.output || "Hermes could not complete the task.";
-    render();
+  function markDirty() {
+    state.submitted = false;
+    state.result = "";
+    state.resultUrl = "";
+    state.error = "";
   }
 
   function render() {
     count.textContent = String(state.notes.length);
     countLabel.textContent = `${state.notes.length} ${state.notes.length === 1 ? "note" : "notes"}`;
-    sendButton.disabled = state.busy || !state.notes.length;
-    sendButton.textContent = state.busy ? "Working…" : "Send to Hermes";
+    sendButton.disabled = state.busy || state.submitted || !state.notes.length;
+    sendButton.textContent = state.busy ? "Sending…" : state.submitted ? "Sent" : "Send to Hermes";
     clearButton.disabled = state.busy || !state.notes.length;
     status.textContent = state.busy
-      ? "Hermes is implementing the feedback…"
-      : state.notes.length
-        ? "Review the batch, then send once."
-        : "Click Annotate, then choose an element.";
+      ? "Posting the batch to Discord…"
+      : state.submitted
+        ? "Hermes V2 was mentioned in Discord."
+        : state.notes.length
+          ? "Review the batch, then send once."
+          : "Click Annotate, then choose an element.";
 
     notesWrap.replaceChildren();
     if (!state.notes.length) {
@@ -303,7 +295,9 @@
 
     errorBox.textContent = state.error;
     errorBox.classList.toggle("hidden", !state.error);
-    resultBox.textContent = state.result;
+    resultText.textContent = state.result;
+    resultLink.href = state.resultUrl;
+    resultLink.classList.toggle("hidden", !state.resultUrl);
     resultBox.classList.toggle("hidden", !state.result);
     renderPins();
   }
@@ -351,12 +345,24 @@
       selector: selectorFor(element),
       component: componentFor(element),
       label: labelFor(element),
-      html: element.outerHTML.slice(0, 4000),
+      html: safeOuterHtml(element),
       rect: {
         x: Math.round(rect.x), y: Math.round(rect.y), width: Math.round(rect.width), height: Math.round(rect.height),
         documentX: Math.round(rect.x + scrollX), documentY: Math.round(rect.y + scrollY),
       },
     };
+  }
+
+  function safeOuterHtml(element) {
+    const clone = element.cloneNode(true);
+    for (const node of [clone, ...clone.querySelectorAll("*")]) {
+      for (const attribute of [...node.attributes]) {
+        if (/^on/i.test(attribute.name) || /^(value|srcdoc|nonce)$/i.test(attribute.name)) {
+          node.removeAttribute(attribute.name);
+        }
+      }
+    }
+    return clone.outerHTML.slice(0, 4000);
   }
 
   function selectorFor(element) {
