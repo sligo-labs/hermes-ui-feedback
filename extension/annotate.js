@@ -39,7 +39,8 @@
       .toolbar .close { padding-inline: 9px; color: #94a3b8; }
       .count { min-width: 24px; padding: 0 5px; color: #94a3b8; text-align: center; }
       .panel { position: fixed; top: 16px; right: 16px; width: min(370px, calc(100vw - 32px)); max-height: calc(100vh - 92px); overflow: auto; border: 1px solid #334155; border-radius: 8px; background: #0b1220; box-shadow: 0 12px 36px rgb(2 8 23 / 55%); pointer-events: auto; }
-      .panel-header { position: sticky; top: 0; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 14px; border-bottom: 1px solid #263247; background: #0b1220; }
+      .panel-header { position: sticky; top: 0; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 14px; border-bottom: 1px solid #263247; background: #0b1220; cursor: grab; touch-action: none; user-select: none; }
+      .panel-header:active { cursor: grabbing; }
       h2 { margin: 0; color: #f8fafc; font: 700 13px/1.2 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; letter-spacing: .04em; text-transform: uppercase; }
       .notes { display: grid; gap: 1px; margin: 0; padding: 0; list-style: none; background: #263247; }
       .note { display: grid; grid-template-columns: 26px 1fr auto; gap: 9px; padding: 11px 12px; background: #0f1828; }
@@ -51,12 +52,16 @@
       .panel-actions { display: flex; align-items: center; justify-content: flex-end; gap: 7px; padding: 10px 12px; border-top: 1px solid #263247; }
       .status { flex: 1; color: #94a3b8; font-size: 11px; }
       .error { margin: 0; padding: 10px 12px; border-top: 1px solid #7f1d1d; background: #2a1118; color: #fecaca; white-space: pre-wrap; }
-      .result { margin: 0; padding: 11px 12px; border-top: 1px solid #14532d; background: #0c1f19; color: #bbf7d0; font-size: 12px; white-space: pre-wrap; }
+      .result { display: flex; align-items: center; gap: 9px; margin: 0; padding: 11px 12px; border-top: 1px solid #14532d; background: #0c1f19; color: #bbf7d0; font-size: 12px; white-space: pre-wrap; }
+      .sent-check { display: grid; flex: 0 0 24px; place-items: center; width: 24px; height: 24px; border-radius: 999px; background: #16a34a; color: white; font-weight: 900; }
+      .result:not(.hidden) .sent-check { animation: sent-pop 300ms ease-out; }
       .result-link { display: inline-block; margin-top: 5px; color: #7dd3fc; font-weight: 700; text-decoration: underline; }
       .composer { position: fixed; width: min(350px, calc(100vw - 24px)); padding: 10px; border: 1px solid #38bdf8; border-radius: 7px; background: #0b1220; box-shadow: 0 14px 40px rgb(2 8 23 / 65%); pointer-events: auto; }
       .composer-label { display: block; margin-bottom: 7px; color: #94a3b8; font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
       textarea { display: block; width: 100%; min-height: 92px; resize: vertical; padding: 9px 10px; border: 1px solid #475569; border-radius: 5px; background: #111c2e; color: #f8fafc; }
       .composer-actions { display: flex; justify-content: flex-end; gap: 7px; margin-top: 8px; }
+      @keyframes sent-pop { from { opacity: 0; transform: scale(.5); } 70% { transform: scale(1.12); } }
+      @media (prefers-reduced-motion: reduce) { .sent-check { animation: none; } }
       @media (max-width: 620px) { .panel { top: 8px; right: 8px; width: calc(100vw - 16px); max-height: 52vh; } .toolbar { bottom: 8px; } }
     </style>
     <div class="layer">
@@ -66,7 +71,7 @@
         <div class="panel-header"><h2>Hermes feedback</h2><span class="count-label"></span></div>
         <div class="notes-wrap"></div>
         <p class="error hidden" role="alert"></p>
-        <div class="result hidden"><span class="result-text"></span><br><a class="result-link" target="_blank" rel="noreferrer">Open Discord thread</a></div>
+        <div class="result hidden"><span class="sent-check" aria-hidden="true">✓</span><span><span class="result-text"></span><br><a class="result-link" target="_blank" rel="noreferrer">Open Discord thread</a></span></div>
         <div class="panel-actions">
           <span class="status">Click Annotate, then choose an element.</span>
           <button class="clear" type="button">Clear</button>
@@ -87,6 +92,8 @@
 
   const $ = (selector) => shadow.querySelector(selector);
   const layer = $(".layer");
+  const panel = $(".panel");
+  const panelHeader = $(".panel-header");
   const targetBox = $(".target");
   const pins = $(".pins");
   const notesWrap = $(".notes-wrap");
@@ -103,6 +110,25 @@
   const composer = $(".composer");
   const composerLabel = $(".composer-label");
   const textarea = $("textarea");
+  let drag;
+
+  function movePanel(event) {
+    if (!drag || event.pointerId !== drag.pointerId) return;
+    panel.style.left = `${Math.max(0, Math.min(innerWidth - panel.offsetWidth, event.clientX - drag.x))}px`;
+    panel.style.top = `${Math.max(0, Math.min(innerHeight - panel.offsetHeight, event.clientY - drag.y))}px`;
+  }
+
+  panelHeader.addEventListener("pointerdown", (event) => {
+    if (event.button !== 0) return;
+    const rect = panel.getBoundingClientRect();
+    drag = { pointerId: event.pointerId, x: event.clientX - rect.left, y: event.clientY - rect.top };
+    panel.style.right = "auto";
+    panelHeader.setPointerCapture(event.pointerId);
+    event.preventDefault();
+  });
+  panelHeader.addEventListener("pointermove", movePanel);
+  panelHeader.addEventListener("pointerup", () => { drag = null; });
+  panelHeader.addEventListener("pointercancel", () => { drag = null; });
 
   function toggle() {
     state.visible = !state.visible;
@@ -457,7 +483,10 @@
   $(".cancel").addEventListener("click", cancelDraft);
   $(".save").addEventListener("click", saveDraft);
   textarea.addEventListener("keydown", (event) => {
-    if ((event.metaKey || event.ctrlKey) && event.key === "Enter") saveDraft();
+    if (event.key === "Enter" && !event.shiftKey && !event.isComposing) {
+      event.preventDefault();
+      saveDraft();
+    }
   });
   clearButton.addEventListener("click", clearNotes);
   sendButton.addEventListener("click", send);

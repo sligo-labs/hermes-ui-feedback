@@ -9,7 +9,7 @@ Point at any configured web UI, leave spatial notes, and send one visible implem
 3. Open a configured page and click **Hermes UI Feedback**.
 4. Click elements, add notes, review the batch, and choose **Send to Hermes**.
 
-If Sligo Access opens, sign in once, return to the page, and send again. The panel links to the resulting Discord thread.
+The extension silently reuses an existing Sligo Access session and shows the Access dialog only when sign-in is actually required. The panel links to the resulting Discord thread.
 
 ## How it routes
 
