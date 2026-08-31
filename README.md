@@ -7,10 +7,10 @@ Point at any configured web UI, leave spatial notes, and send one visible implem
 1. Download and unzip the latest extension release.
 2. Open `chrome://extensions`, enable **Developer mode**, choose **Load unpacked**, and select the unzipped `extension/` directory.
 3. Open a configured page and click **Hermes UI Feedback**.
-4. Click elements, add notes, review the batch, and choose **Send to Hermes**.
+4. Use **+** to annotate your next page click, add notes in the panel, then choose **Send to Hermes**.
 
 The extension silently reuses an existing Sligo Access session and shows the Access dialog only when sign-in is actually required. The panel links to the resulting Discord thread.
-Drag the panel by its title bar or collapse it with the **−** button when it covers the page.
+The page remains fully interactive until you press **+**. Drag the panel by its title bar or collapse it with the header chevron when it covers the page.
 
 ## How it routes
 
