@@ -39,8 +39,12 @@
       .toolbar .close { padding-inline: 9px; color: #94a3b8; }
       .count { min-width: 24px; padding: 0 5px; color: #94a3b8; text-align: center; }
       .panel { position: fixed; top: 16px; right: 16px; width: min(370px, calc(100vw - 32px)); max-height: calc(100vh - 92px); overflow: auto; border: 1px solid #334155; border-radius: 8px; background: #0b1220; box-shadow: 0 12px 36px rgb(2 8 23 / 55%); pointer-events: auto; }
+      .panel.collapsed { width: auto; }
+      .panel.collapsed > :not(.panel-header) { display: none; }
       .panel-header { position: sticky; top: 0; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 14px; border-bottom: 1px solid #263247; background: #0b1220; cursor: grab; touch-action: none; user-select: none; }
       .panel-header:active { cursor: grabbing; }
+      .panel-head-actions { display: flex; align-items: center; gap: 8px; }
+      .panel-toggle { min-width: 26px; min-height: 24px !important; padding: 1px 7px !important; color: #94a3b8 !important; font-size: 16px; line-height: 1; }
       h2 { margin: 0; color: #f8fafc; font: 700 13px/1.2 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; letter-spacing: .04em; text-transform: uppercase; }
       .notes { display: grid; gap: 1px; margin: 0; padding: 0; list-style: none; background: #263247; }
       .note { display: grid; grid-template-columns: 26px 1fr auto; gap: 9px; padding: 11px 12px; background: #0f1828; }
@@ -68,7 +72,7 @@
       <div class="target hidden"></div>
       <div class="pins"></div>
       <section class="panel" aria-label="Hermes UI feedback">
-        <div class="panel-header"><h2>Hermes feedback</h2><span class="count-label"></span></div>
+        <div class="panel-header" title="Drag to move"><h2>Hermes feedback</h2><span class="panel-head-actions"><span class="count-label"></span><button class="panel-toggle" type="button" aria-expanded="true" aria-label="Collapse feedback panel">−</button></span></div>
         <div class="notes-wrap"></div>
         <p class="error hidden" role="alert"></p>
         <div class="result hidden"><span class="sent-check" aria-hidden="true">✓</span><span><span class="result-text"></span><br><a class="result-link" target="_blank" rel="noreferrer">Open Discord thread</a></span></div>
@@ -94,6 +98,7 @@
   const layer = $(".layer");
   const panel = $(".panel");
   const panelHeader = $(".panel-header");
+  const panelToggle = $(".panel-toggle");
   const targetBox = $(".target");
   const pins = $(".pins");
   const notesWrap = $(".notes-wrap");
@@ -119,7 +124,7 @@
   }
 
   panelHeader.addEventListener("pointerdown", (event) => {
-    if (event.button !== 0) return;
+    if (event.button !== 0 || event.target.closest("button")) return;
     const rect = panel.getBoundingClientRect();
     drag = { pointerId: event.pointerId, x: event.clientX - rect.left, y: event.clientY - rect.top };
     panel.style.right = "auto";
@@ -129,6 +134,16 @@
   panelHeader.addEventListener("pointermove", movePanel);
   panelHeader.addEventListener("pointerup", () => { drag = null; });
   panelHeader.addEventListener("pointercancel", () => { drag = null; });
+  panelToggle.addEventListener("click", () => {
+    const collapsed = panel.classList.toggle("collapsed");
+    panelToggle.textContent = collapsed ? "+" : "−";
+    panelToggle.setAttribute("aria-expanded", String(!collapsed));
+    panelToggle.setAttribute("aria-label", `${collapsed ? "Expand" : "Collapse"} feedback panel`);
+    const rect = panel.getBoundingClientRect();
+    panel.style.left = `${Math.max(0, Math.min(innerWidth - rect.width, rect.left))}px`;
+    panel.style.top = `${Math.max(0, Math.min(innerHeight - rect.height, rect.top))}px`;
+    panel.style.right = "auto";
+  });
 
   function toggle() {
     state.visible = !state.visible;

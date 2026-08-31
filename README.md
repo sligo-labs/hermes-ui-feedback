@@ -10,6 +10,7 @@ Point at any configured web UI, leave spatial notes, and send one visible implem
 4. Click elements, add notes, review the batch, and choose **Send to Hermes**.
 
 The extension silently reuses an existing Sligo Access session and shows the Access dialog only when sign-in is actually required. The panel links to the resulting Discord thread.
+Drag the panel by its title bar or collapse it with the **−** button when it covers the page.
 
 ## How it routes
 
