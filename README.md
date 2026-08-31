@@ -23,6 +23,6 @@ The service strips input values, inline event handlers, `srcdoc`, and nonces fro
 
 ## Add a project
 
-Add one entry to `projects.json` with production hostnames, optional preview-host regular expressions, the Discord parent channel, and the environment-variable name containing its webhook URL. Restart the service after changing the file.
+Add one entry to `projects.json` with production hostnames, optional preview-host regular expressions, and each route's Discord parent channel plus webhook environment variable. Restart the service after changing the file.
 
 The server uses only Node.js built-ins and the installed read-only `hermes discord` CLI for preview-thread lookup.

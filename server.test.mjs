@@ -32,10 +32,10 @@ test("validates feedback and routes production and preview hosts", () => {
   const feedback = validateSubmission(valid);
   assert.equal(feedback.annotations[0].component, "Toolbar");
   assert.equal(resolveProject(feedback.page.url, config).preview, false);
-  assert.equal(
-    resolveProject("https://pid-git-feature-congress-expandable-member-rows-sligo-labs.vercel.app", config).preview,
-    true,
-  );
+  const preview = resolveProject("https://pid-git-feature-congress-expandable-member-rows-sligo-labs.vercel.app", config);
+  assert.equal(preview.preview, true);
+  assert.equal(preview.project.previewDiscordParentChannelId, "1505275259006484570");
+  assert.equal(preview.project.previewWebhookEnv, "PID_CHATBOT_TO_PID_DISCORD_WEBHOOK_URL");
   assert.throws(() => resolveProject("https://example.com", config), /No feedback project/);
 });
 

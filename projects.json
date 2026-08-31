@@ -7,7 +7,9 @@
       "productionHosts": ["pid-chatbot.sligolabs.com"],
       "previewHostPatterns": ["^pid(?:-chatbot)?-git-[a-z0-9-]+-sligo-labs\\.vercel\\.app$"],
       "discordParentChannelId": "1539490801640284200",
-      "webhookEnv": "PID_CHATBOT_DISCORD_WEBHOOK_URL"
+      "webhookEnv": "PID_CHATBOT_DISCORD_WEBHOOK_URL",
+      "previewDiscordParentChannelId": "1505275259006484570",
+      "previewWebhookEnv": "PID_CHATBOT_TO_PID_DISCORD_WEBHOOK_URL"
     }
   ]
 }

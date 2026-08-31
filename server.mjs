@@ -73,6 +73,10 @@ export function loadProjects(path) {
     previewHostPatterns: stringArray(project.previewHostPatterns).map((pattern) => new RegExp(pattern, "i")),
     discordParentChannelId: requiredSnowflake(project.discordParentChannelId, `projects[${index}].discordParentChannelId`),
     webhookEnv: boundedString(project.webhookEnv, 100),
+    previewDiscordParentChannelId: project.previewDiscordParentChannelId
+      ? requiredSnowflake(project.previewDiscordParentChannelId, `projects[${index}].previewDiscordParentChannelId`)
+      : null,
+    previewWebhookEnv: boundedString(project.previewWebhookEnv, 100),
   }));
   if (projects.some((project) => !project.webhookEnv)) throw new Error("Every project requires webhookEnv.");
   return { botId, guildId, projects };
@@ -137,7 +141,8 @@ export function createFeedbackServer({
       const threadId = preview
         ? await findPreviewThread(project, feedback.page.url, hermes).catch(() => null)
         : null;
-      const result = await postFeedback({ feedback, config, project, threadId });
+      const webhookEnv = preview && project.previewWebhookEnv ? project.previewWebhookEnv : project.webhookEnv;
+      const result = await postFeedback({ feedback, config, project, threadId, webhookEnv });
       json(response, 201, {
         id: result.id,
         permalink: `https://discord.com/channels/${config.guildId}/${result.channel_id}/${result.id}`,
@@ -153,7 +158,8 @@ export function createFeedbackServer({
 
 export async function findPreviewThread(project, pageUrl, hermes) {
   const target = new URL(pageUrl).origin;
-  const recent = await runDiscord(hermes, ["recent", project.discordParentChannelId, "--limit", "100", "--json"]);
+  const channelId = project.previewDiscordParentChannelId || project.discordParentChannelId;
+  const recent = await runDiscord(hermes, ["recent", channelId, "--limit", "100", "--json"]);
   const threadIds = recent.messages
     ?.map((message) => message.thread?.id)
     .filter((id) => typeof id === "string") ?? [];
@@ -185,8 +191,8 @@ async function runDiscord(hermes, args) {
   return JSON.parse(stdout);
 }
 
-async function postFeedback({ feedback, config, project, threadId }) {
-  const webhook = process.env[project.webhookEnv];
+async function postFeedback({ feedback, config, project, threadId, webhookEnv }) {
+  const webhook = process.env[webhookEnv];
   if (!webhook) throw new Error(`${project.name} feedback webhook is not configured.`);
   const endpoint = new URL(webhook);
   if (endpoint.protocol !== "https:" || endpoint.hostname !== "discord.com" || !endpoint.pathname.startsWith("/api/webhooks/")) {
