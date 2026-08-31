@@ -6,7 +6,7 @@
 
   const state = {
     visible: true,
-    annotating: true,
+    annotating: false,
     notes: [],
     hovered: null,
     draft: null,
@@ -30,21 +30,18 @@
       button { cursor: pointer; }
       .hidden { display: none !important; }
       .target { position: fixed; border: 2px solid #38bdf8; background: rgb(56 189 248 / 9%); box-shadow: 0 0 0 2px rgb(2 8 23 / 75%); pointer-events: none; transition: inset 60ms linear; }
-      .pin { position: fixed; width: 26px; height: 26px; padding: 0; border: 2px solid #f8fafc; border-radius: 999px; background: #0284c7; color: white; box-shadow: 0 3px 12px rgb(2 8 23 / 55%); font-weight: 800; pointer-events: auto; transform: translate(-50%, -50%); }
-      .toolbar { position: fixed; left: 50%; bottom: 18px; display: flex; align-items: center; gap: 6px; min-height: 44px; padding: 6px; border: 1px solid #334155; border-radius: 8px; background: #0b1220; box-shadow: 0 12px 36px rgb(2 8 23 / 55%); pointer-events: auto; transform: translateX(-50%); }
-      .toolbar button, .panel button, .composer button { min-height: 32px; padding: 6px 10px; border: 1px solid #334155; border-radius: 5px; background: #172033; color: #dbeafe; }
-      .toolbar button:hover, .panel button:hover, .composer button:hover { border-color: #64748b; background: #22304a; }
-      .toolbar button:focus-visible, .panel button:focus-visible, .composer button:focus-visible, textarea:focus-visible { outline: 2px solid #38bdf8; outline-offset: 2px; }
-      .toolbar .active, .primary { border-color: #38bdf8 !important; background: #0369a1 !important; color: white !important; }
-      .toolbar .close { padding-inline: 9px; color: #94a3b8; }
-      .count { min-width: 24px; padding: 0 5px; color: #94a3b8; text-align: center; }
-      .panel { position: fixed; top: 16px; right: 16px; width: min(370px, calc(100vw - 32px)); max-height: calc(100vh - 92px); overflow: auto; border: 1px solid #334155; border-radius: 8px; background: #0b1220; box-shadow: 0 12px 36px rgb(2 8 23 / 55%); pointer-events: auto; }
+      .pin { position: fixed; display: grid; place-items: center; width: 26px; height: 26px; border: 2px solid #f8fafc; border-radius: 999px; background: #0284c7; color: white; box-shadow: 0 3px 12px rgb(2 8 23 / 55%); font-weight: 800; pointer-events: none; transform: translate(-50%, -50%); }
+      .panel button { min-height: 32px; padding: 6px 10px; border: 1px solid #334155; border-radius: 5px; background: #172033; color: #dbeafe; }
+      .panel button:hover { border-color: #64748b; background: #22304a; }
+      .panel button:focus-visible, textarea:focus-visible { outline: 2px solid #38bdf8; outline-offset: 2px; }
+      .active, .primary { border-color: #38bdf8 !important; background: #0369a1 !important; color: white !important; }
+      .panel { position: fixed; top: 16px; right: 16px; width: min(370px, calc(100vw - 32px)); max-height: calc(100vh - 32px); overflow: auto; border: 1px solid #334155; border-radius: 8px; background: #0b1220; box-shadow: 0 12px 36px rgb(2 8 23 / 55%); pointer-events: auto; }
       .panel.collapsed { width: auto; }
       .panel.collapsed > :not(.panel-header) { display: none; }
       .panel-header { position: sticky; top: 0; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 14px; border-bottom: 1px solid #263247; background: #0b1220; cursor: grab; touch-action: none; user-select: none; }
       .panel-header:active { cursor: grabbing; }
       .panel-head-actions { display: flex; align-items: center; gap: 8px; }
-      .panel-toggle { min-width: 26px; min-height: 24px !important; padding: 1px 7px !important; color: #94a3b8 !important; font-size: 16px; line-height: 1; }
+      .panel-toggle, .panel-close { min-width: 26px; min-height: 24px !important; padding: 1px 7px !important; color: #94a3b8 !important; font-size: 14px; line-height: 1; }
       h2 { margin: 0; color: #f8fafc; font: 700 13px/1.2 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; letter-spacing: .04em; text-transform: uppercase; }
       .notes { display: grid; gap: 1px; margin: 0; padding: 0; list-style: none; background: #263247; }
       .note { display: grid; grid-template-columns: 26px 1fr auto; gap: 9px; padding: 11px 12px; background: #0f1828; }
@@ -53,45 +50,42 @@
       .note-context { color: #8291a8; font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
       .remove { align-self: start; min-height: 24px !important; padding: 2px 7px !important; color: #94a3b8 !important; }
       .empty { margin: 0; padding: 18px 14px; color: #94a3b8; }
-      .panel-actions { display: flex; align-items: center; justify-content: flex-end; gap: 7px; padding: 10px 12px; border-top: 1px solid #263247; }
+      .draft { padding: 11px 12px; border-bottom: 1px solid #263247; background: #0f1828; }
+      .draft-label { display: block; margin-bottom: 7px; color: #94a3b8; font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      textarea { display: block; width: 100%; min-height: 92px; resize: vertical; padding: 9px 10px; border: 1px solid #475569; border-radius: 5px; background: #111c2e; color: #f8fafc; }
+      .draft-actions { display: flex; justify-content: flex-end; gap: 7px; margin-top: 8px; }
+      .panel-actions { display: flex; align-items: center; gap: 7px; padding: 10px 12px; border-top: 1px solid #263247; }
+      .add { flex: 0 0 32px; width: 32px; padding: 0 !important; font-size: 20px; line-height: 1; }
       .status { flex: 1; color: #94a3b8; font-size: 11px; }
       .error { margin: 0; padding: 10px 12px; border-top: 1px solid #7f1d1d; background: #2a1118; color: #fecaca; white-space: pre-wrap; }
       .result { display: flex; align-items: center; gap: 9px; margin: 0; padding: 11px 12px; border-top: 1px solid #14532d; background: #0c1f19; color: #bbf7d0; font-size: 12px; white-space: pre-wrap; }
       .sent-check { display: grid; flex: 0 0 24px; place-items: center; width: 24px; height: 24px; border-radius: 999px; background: #16a34a; color: white; font-weight: 900; }
       .result:not(.hidden) .sent-check { animation: sent-pop 300ms ease-out; }
       .result-link { display: inline-block; margin-top: 5px; color: #7dd3fc; font-weight: 700; text-decoration: underline; }
-      .composer { position: fixed; width: min(350px, calc(100vw - 24px)); padding: 10px; border: 1px solid #38bdf8; border-radius: 7px; background: #0b1220; box-shadow: 0 14px 40px rgb(2 8 23 / 65%); pointer-events: auto; }
-      .composer-label { display: block; margin-bottom: 7px; color: #94a3b8; font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-      textarea { display: block; width: 100%; min-height: 92px; resize: vertical; padding: 9px 10px; border: 1px solid #475569; border-radius: 5px; background: #111c2e; color: #f8fafc; }
-      .composer-actions { display: flex; justify-content: flex-end; gap: 7px; margin-top: 8px; }
       @keyframes sent-pop { from { opacity: 0; transform: scale(.5); } 70% { transform: scale(1.12); } }
       @media (prefers-reduced-motion: reduce) { .sent-check { animation: none; } }
-      @media (max-width: 620px) { .panel { top: 8px; right: 8px; width: calc(100vw - 16px); max-height: 52vh; } .toolbar { bottom: 8px; } }
+      @media (max-width: 620px) { .panel { top: 8px; right: 8px; width: calc(100vw - 16px); max-height: calc(100vh - 16px); } }
     </style>
     <div class="layer">
       <div class="target hidden"></div>
       <div class="pins"></div>
       <section class="panel" aria-label="Hermes UI feedback">
-        <div class="panel-header" title="Drag to move"><h2>Hermes feedback</h2><span class="panel-head-actions"><span class="count-label"></span><button class="panel-toggle" type="button" aria-expanded="true" aria-label="Collapse feedback panel">−</button></span></div>
+        <div class="panel-header" title="Drag to move"><h2>Hermes feedback</h2><span class="panel-head-actions"><span class="count-label" aria-live="polite"></span><button class="panel-toggle" type="button" aria-expanded="true" aria-label="Collapse feedback panel">▾</button><button class="panel-close" type="button" aria-label="Hide Hermes feedback">×</button></span></div>
+        <div class="draft hidden" role="group" aria-label="Add UI feedback">
+          <span class="draft-label"></span>
+          <textarea placeholder="What should change?"></textarea>
+          <div class="draft-actions"><button class="cancel" type="button">Cancel</button><button class="save primary" type="button">Add note</button></div>
+        </div>
         <div class="notes-wrap"></div>
         <p class="error hidden" role="alert"></p>
         <div class="result hidden"><span class="sent-check" aria-hidden="true">✓</span><span><span class="result-text"></span><br><a class="result-link" target="_blank" rel="noreferrer">Open Discord thread</a></span></div>
         <div class="panel-actions">
-          <span class="status">Click Annotate, then choose an element.</span>
+          <button class="add" type="button" aria-label="Add annotation" aria-pressed="false" title="Annotate next click">+</button>
+          <span class="status">Browse normally, or add feedback.</span>
           <button class="clear" type="button">Clear</button>
           <button class="send primary" type="button">Send to Hermes</button>
         </div>
       </section>
-      <div class="composer hidden" role="dialog" aria-label="Add UI feedback">
-        <span class="composer-label"></span>
-        <textarea placeholder="What should change?"></textarea>
-        <div class="composer-actions"><button class="cancel" type="button">Cancel</button><button class="save primary" type="button">Add note</button></div>
-      </div>
-      <div class="toolbar" aria-label="Annotation controls">
-        <button class="annotate active" type="button">Annotate</button>
-        <span class="count" aria-live="polite">0</span>
-        <button class="close" type="button" aria-label="Hide Hermes feedback">Close</button>
-      </div>
     </div>`;
 
   const $ = (selector) => shadow.querySelector(selector);
@@ -102,18 +96,17 @@
   const targetBox = $(".target");
   const pins = $(".pins");
   const notesWrap = $(".notes-wrap");
-  const annotateButton = $(".annotate");
+  const addButton = $(".add");
   const sendButton = $(".send");
   const clearButton = $(".clear");
-  const count = $(".count");
   const countLabel = $(".count-label");
   const status = $(".status");
   const errorBox = $(".error");
   const resultBox = $(".result");
   const resultText = $(".result-text");
   const resultLink = $(".result-link");
-  const composer = $(".composer");
-  const composerLabel = $(".composer-label");
+  const draftBox = $(".draft");
+  const draftLabel = $(".draft-label");
   const textarea = $("textarea");
   let drag;
 
@@ -121,6 +114,13 @@
     if (!drag || event.pointerId !== drag.pointerId) return;
     panel.style.left = `${Math.max(0, Math.min(innerWidth - panel.offsetWidth, event.clientX - drag.x))}px`;
     panel.style.top = `${Math.max(0, Math.min(innerHeight - panel.offsetHeight, event.clientY - drag.y))}px`;
+  }
+
+  function clampPanel() {
+    const rect = panel.getBoundingClientRect();
+    panel.style.left = `${Math.max(0, Math.min(innerWidth - rect.width, rect.left))}px`;
+    panel.style.top = `${Math.max(0, Math.min(innerHeight - rect.height, rect.top))}px`;
+    panel.style.right = "auto";
   }
 
   panelHeader.addEventListener("pointerdown", (event) => {
@@ -134,32 +134,33 @@
   panelHeader.addEventListener("pointermove", movePanel);
   panelHeader.addEventListener("pointerup", () => { drag = null; });
   panelHeader.addEventListener("pointercancel", () => { drag = null; });
-  panelToggle.addEventListener("click", () => {
-    const collapsed = panel.classList.toggle("collapsed");
-    panelToggle.textContent = collapsed ? "+" : "−";
+  function setPanelCollapsed(collapsed) {
+    panel.classList.toggle("collapsed", collapsed);
+    panelToggle.textContent = collapsed ? "▸" : "▾";
     panelToggle.setAttribute("aria-expanded", String(!collapsed));
     panelToggle.setAttribute("aria-label", `${collapsed ? "Expand" : "Collapse"} feedback panel`);
-    const rect = panel.getBoundingClientRect();
-    panel.style.left = `${Math.max(0, Math.min(innerWidth - rect.width, rect.left))}px`;
-    panel.style.top = `${Math.max(0, Math.min(innerHeight - rect.height, rect.top))}px`;
-    panel.style.right = "auto";
-  });
+    clampPanel();
+  }
+  panelToggle.addEventListener("click", () => setPanelCollapsed(!panel.classList.contains("collapsed")));
 
   function toggle() {
     state.visible = !state.visible;
     layer.classList.toggle("hidden", !state.visible);
-    if (!state.visible) cancelDraft();
+    if (!state.visible) {
+      setAnnotating(false);
+      cancelDraft();
+    }
     document.documentElement.style.cursor = state.visible && state.annotating ? "crosshair" : "";
     renderTarget();
   }
 
   function setAnnotating(value) {
     state.annotating = value;
-    annotateButton.classList.toggle("active", value);
-    annotateButton.textContent = value ? "Annotating…" : "Annotate";
+    addButton.classList.toggle("active", value);
+    addButton.setAttribute("aria-pressed", String(value));
     document.documentElement.style.cursor = value ? "crosshair" : "";
     if (!value) state.hovered = null;
-    renderTarget();
+    render();
   }
 
   function overlayEvent(event) {
@@ -186,25 +187,25 @@
     if (!element) return;
     event.preventDefault();
     event.stopImmediatePropagation();
-    openDraft(element, event.clientX, event.clientY);
+    openDraft(element);
   }
 
-  function openDraft(element, x, y) {
+  function openDraft(element) {
     state.draft = { element, context: elementContext(element) };
-    composerLabel.textContent = state.draft.context.component || state.draft.context.label;
-    composer.style.left = `${Math.max(12, Math.min(x + 12, innerWidth - 362))}px`;
-    composer.style.top = `${Math.max(12, Math.min(y + 12, innerHeight - 180))}px`;
-    composer.classList.remove("hidden");
+    setAnnotating(false);
+    setPanelCollapsed(false);
+    draftLabel.textContent = state.draft.context.component || state.draft.context.label;
+    draftBox.classList.remove("hidden");
     textarea.value = "";
     textarea.focus();
-    renderTarget();
+    render();
   }
 
   function cancelDraft() {
     state.draft = null;
-    composer.classList.add("hidden");
+    draftBox.classList.add("hidden");
     textarea.value = "";
-    renderTarget();
+    render();
   }
 
   function saveDraft() {
@@ -218,7 +219,6 @@
     markDirty();
     cancelDraft();
     persist();
-    render();
   }
 
   function removeNote(id) {
@@ -286,24 +286,29 @@
   }
 
   function render() {
-    count.textContent = String(state.notes.length);
     countLabel.textContent = `${state.notes.length} ${state.notes.length === 1 ? "note" : "notes"}`;
-    sendButton.disabled = state.busy || state.submitted || !state.notes.length;
+    addButton.disabled = state.busy || Boolean(state.draft);
+    sendButton.disabled = state.busy || state.submitted || !state.notes.length || Boolean(state.draft);
     sendButton.textContent = state.busy ? "Sending…" : state.submitted ? "Sent" : "Send to Hermes";
-    clearButton.disabled = state.busy || !state.notes.length;
+    clearButton.disabled = state.busy || !state.notes.length || Boolean(state.draft);
     status.textContent = state.busy
       ? "Posting the batch to Discord…"
-      : state.submitted
-        ? "Hermes V2 was mentioned in Discord."
-        : state.notes.length
-          ? "Review the batch, then send once."
-          : "Click Annotate, then choose an element.";
+      : state.annotating
+        ? "Click one page element."
+        : state.draft
+          ? "Describe the selected element."
+          : state.submitted
+            ? "Hermes V2 was mentioned in Discord."
+            : state.notes.length
+              ? "Review the batch, then send once."
+              : "Browse normally, or add feedback.";
 
     notesWrap.replaceChildren();
+    notesWrap.classList.toggle("hidden", Boolean(state.draft) && !state.notes.length);
     if (!state.notes.length) {
       const empty = document.createElement("p");
       empty.className = "empty";
-      empty.textContent = "No notes yet. Your next click targets the page, not the toolbar.";
+      empty.textContent = "No notes yet. Use + when you want to annotate a page element.";
       notesWrap.append(empty);
     } else {
       const list = document.createElement("ol");
@@ -341,11 +346,12 @@
     resultLink.classList.toggle("hidden", !state.resultUrl);
     resultBox.classList.toggle("hidden", !state.result);
     renderPins();
+    renderTarget();
   }
 
   function renderTarget() {
     const element = state.draft?.element ?? state.hovered;
-    if (!state.visible || !state.annotating || !element?.isConnected) {
+    if (!state.visible || (!state.annotating && !state.draft) || !element?.isConnected) {
       targetBox.classList.add("hidden");
       return;
     }
@@ -368,9 +374,8 @@
       if (!element) return;
       const rect = element.getBoundingClientRect();
       if (rect.bottom < 0 || rect.top > innerHeight || rect.right < 0 || rect.left > innerWidth) return;
-      const pin = document.createElement("button");
+      const pin = document.createElement("span");
       pin.className = "pin";
-      pin.type = "button";
       pin.textContent = String(index + 1);
       pin.title = note.message;
       pin.style.left = `${Math.max(13, Math.min(innerWidth - 13, rect.left))}px`;
@@ -484,17 +489,17 @@
     }
     if (event.altKey && event.shiftKey && event.key.toLowerCase() === "a") {
       event.preventDefault();
-      setAnnotating(!state.annotating);
+      if (!state.draft) setAnnotating(!state.annotating);
     }
   }, true);
   addEventListener("scroll", () => { renderTarget(); renderPins(); }, true);
-  addEventListener("resize", () => { renderTarget(); renderPins(); });
+  addEventListener("resize", () => { clampPanel(); renderTarget(); renderPins(); });
   chrome.runtime.onMessage.addListener((message) => {
     if (message?.type === "toggle") toggle();
   });
 
-  annotateButton.addEventListener("click", () => setAnnotating(!state.annotating));
-  $(".close").addEventListener("click", toggle);
+  addButton.addEventListener("click", () => setAnnotating(!state.annotating));
+  $(".panel-close").addEventListener("click", toggle);
   $(".cancel").addEventListener("click", cancelDraft);
   $(".save").addEventListener("click", saveDraft);
   textarea.addEventListener("keydown", (event) => {
