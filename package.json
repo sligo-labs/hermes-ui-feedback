@@ -1,0 +1,16 @@
+{
+  "name": "hermes-ui-feedback",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "hermes-ui-feedback": "server.mjs"
+  },
+  "scripts": {
+    "start": "node server.mjs",
+    "test": "node --test server.test.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
