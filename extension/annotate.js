@@ -49,14 +49,12 @@
       .note-message { margin: 0 0 4px; color: #e5edf8; white-space: pre-wrap; overflow-wrap: anywhere; }
       .note-context { color: #8291a8; font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
       .remove { align-self: start; min-height: 24px !important; padding: 2px 7px !important; color: #94a3b8 !important; }
-      .empty { margin: 0; padding: 18px 14px; color: #94a3b8; }
       .draft { padding: 11px 12px; border-bottom: 1px solid #263247; background: #0f1828; }
       .draft-label { display: block; margin-bottom: 7px; color: #94a3b8; font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
       textarea { display: block; width: 100%; min-height: 92px; resize: vertical; padding: 9px 10px; border: 1px solid #475569; border-radius: 5px; background: #111c2e; color: #f8fafc; }
       .draft-actions { display: flex; justify-content: flex-end; gap: 7px; margin-top: 8px; }
       .panel-actions { display: flex; align-items: center; gap: 7px; padding: 10px 12px; border-top: 1px solid #263247; }
-      .add { flex: 0 0 32px; width: 32px; padding: 0 !important; font-size: 20px; line-height: 1; }
-      .status { flex: 1; color: #94a3b8; font-size: 11px; }
+      .add { flex: 0 0 32px; width: 32px; margin-right: auto; padding: 0 !important; font-size: 20px; line-height: 1; }
       .error { margin: 0; padding: 10px 12px; border-top: 1px solid #7f1d1d; background: #2a1118; color: #fecaca; white-space: pre-wrap; }
       .result { display: flex; align-items: center; gap: 9px; margin: 0; padding: 11px 12px; border-top: 1px solid #14532d; background: #0c1f19; color: #bbf7d0; font-size: 12px; white-space: pre-wrap; }
       .sent-check { display: grid; flex: 0 0 24px; place-items: center; width: 24px; height: 24px; border-radius: 999px; background: #16a34a; color: white; font-weight: 900; }
@@ -81,7 +79,6 @@
         <div class="result hidden"><span class="sent-check" aria-hidden="true">✓</span><span><span class="result-text"></span><br><a class="result-link" target="_blank" rel="noreferrer">Open Discord thread</a></span></div>
         <div class="panel-actions">
           <button class="add" type="button" aria-label="Add annotation" aria-pressed="false" title="Annotate next click">+</button>
-          <span class="status">Browse normally, or add feedback.</span>
           <button class="clear" type="button">Clear</button>
           <button class="send primary" type="button">Send to Hermes</button>
         </div>
@@ -100,7 +97,6 @@
   const sendButton = $(".send");
   const clearButton = $(".clear");
   const countLabel = $(".count-label");
-  const status = $(".status");
   const errorBox = $(".error");
   const resultBox = $(".result");
   const resultText = $(".result-text");
@@ -270,6 +266,8 @@
     }
     state.busy = false;
     state.submitted = true;
+    state.notes = [];
+    persist();
     state.resultUrl = response.permalink;
     state.result = response.routedTo === "preview-thread"
       ? "Sent to the existing preview thread."
@@ -291,26 +289,9 @@
     sendButton.disabled = state.busy || state.submitted || !state.notes.length || Boolean(state.draft);
     sendButton.textContent = state.busy ? "Sending…" : state.submitted ? "Sent" : "Send to Hermes";
     clearButton.disabled = state.busy || !state.notes.length || Boolean(state.draft);
-    status.textContent = state.busy
-      ? "Posting the batch to Discord…"
-      : state.annotating
-        ? "Click one page element."
-        : state.draft
-          ? "Describe the selected element."
-          : state.submitted
-            ? "Hermes V2 was mentioned in Discord."
-            : state.notes.length
-              ? "Review the batch, then send once."
-              : "Browse normally, or add feedback.";
-
     notesWrap.replaceChildren();
     notesWrap.classList.toggle("hidden", Boolean(state.draft) && !state.notes.length);
-    if (!state.notes.length) {
-      const empty = document.createElement("p");
-      empty.className = "empty";
-      empty.textContent = "No notes yet. Use + when you want to annotate a page element.";
-      notesWrap.append(empty);
-    } else {
+    if (state.notes.length) {
       const list = document.createElement("ol");
       list.className = "notes";
       state.notes.forEach((note, index) => {
