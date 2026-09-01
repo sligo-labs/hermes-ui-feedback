@@ -33,16 +33,20 @@ test("validates feedback and routes production and preview hosts", () => {
   const feedback = validateSubmission(valid);
   assert.equal(feedback.annotations[0].component, "Toolbar");
   assert.equal(resolveProject(feedback.page.url, config).preview, false);
-  const preview = resolveProject("https://pid-git-feature-congress-expandable-member-rows-sligo-labs.vercel.app", config);
+  const preview = resolveProject("https://pid-chatbot-git-feature-congress-expandable-member-rows-sligo-labs.vercel.app", config);
   assert.equal(preview.preview, true);
   assert.equal(preview.project.previewDiscordParentChannelId, "1505275259006484570");
   assert.equal(preview.project.previewWebhookEnv, "PID_CHATBOT_TO_PID_DISCORD_WEBHOOK_URL");
+  assert.equal(resolveProject("https://pid.sligolabs.com", config).project.name, "PID Production");
+  assert.equal(resolveProject("https://agora-graph-git-redesign-sligo-labs.vercel.app", config).project.name, "PID Graph");
+  assert.equal(resolveProject("https://pid-newsletter-git-redesign-sligo-labs.vercel.app", config).project.name, "PID Newsletter");
+  assert.equal(resolveProject("https://pid-map-git-redesign-sligo-labs.vercel.app", config).project.name, "PID Map");
   assert.throws(() => resolveProject("https://example.com", config), /No feedback project/);
 });
 
 test("builds one safe human summary and rejects invalid screenshots", () => {
   const feedback = validateSubmission(valid);
-  const content = buildDiscordContent(feedback, config, config.projects[0]);
+  const content = buildDiscordContent(feedback, config, resolveProject(feedback.page.url, config).project);
   assert.match(content, /^<@1535453212637667368>/);
   assert.match(content, /Move this to the left/);
   assert.match(content, /＠everyone/);

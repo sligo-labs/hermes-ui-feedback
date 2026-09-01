@@ -3,13 +3,45 @@
   "guildId": "1502787243230756904",
   "projects": [
     {
+      "name": "PID Production",
+      "productionHosts": ["pid.sligolabs.com"],
+      "previewHostPatterns": ["^pid-git-[a-z0-9-]+-sligo-labs\\.vercel\\.app$"],
+      "discordParentChannelId": "1505275259006484570",
+      "webhookEnv": "PID_PRODUCTION_TO_PID_DISCORD_WEBHOOK_URL"
+    },
+    {
       "name": "PID Chatbot",
       "productionHosts": ["pid-chatbot.sligolabs.com"],
-      "previewHostPatterns": ["^pid(?:-chatbot)?-git-[a-z0-9-]+-sligo-labs\\.vercel\\.app$"],
+      "previewHostPatterns": ["^pid-chatbot-git-[a-z0-9-]+-sligo-labs\\.vercel\\.app$"],
       "discordParentChannelId": "1539490801640284200",
       "webhookEnv": "PID_CHATBOT_DISCORD_WEBHOOK_URL",
       "previewDiscordParentChannelId": "1505275259006484570",
       "previewWebhookEnv": "PID_CHATBOT_TO_PID_DISCORD_WEBHOOK_URL"
+    },
+    {
+      "name": "PID Graph",
+      "productionHosts": ["pid-graph.sligolabs.com"],
+      "previewHostPatterns": [
+        "^(?:pid-graph|agora-graph)-git-[a-z0-9-]+-sligo-labs\\.vercel\\.app$"
+      ],
+      "discordParentChannelId": "1539490874956709888",
+      "webhookEnv": "PID_GRAPH_DISCORD_WEBHOOK_URL"
+    },
+    {
+      "name": "PID Newsletter",
+      "productionHosts": ["pid-newsletter.sligolabs.com"],
+      "previewHostPatterns": ["^pid-newsletter-git-[a-z0-9-]+-sligo-labs\\.vercel\\.app$"],
+      "discordParentChannelId": "1539490903553474622",
+      "webhookEnv": "PID_NEWSLETTER_DISCORD_WEBHOOK_URL"
+    },
+    {
+      "name": "PID Map",
+      "productionHosts": ["pid-map.sligolabs.com"],
+      "previewHostPatterns": [
+        "^(?:pid-map|agora-electability)-git-[a-z0-9-]+-sligo-labs\\.vercel\\.app$"
+      ],
+      "discordParentChannelId": "1539490932863533096",
+      "webhookEnv": "PID_MAP_DISCORD_WEBHOOK_URL"
     }
   ]
 }
