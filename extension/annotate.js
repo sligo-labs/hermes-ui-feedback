@@ -178,7 +178,15 @@
   }
 
   function handleClick(event) {
-    if (!state.visible || !state.annotating || state.draft || overlayEvent(event)) return;
+    if (!state.visible || overlayEvent(event)) return;
+    if (state.draft) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      cancelDraft();
+      setAnnotating(true);
+      return;
+    }
+    if (!state.annotating) return;
     const element = normalizeTarget(event.target);
     if (!element) return;
     event.preventDefault();
