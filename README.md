@@ -11,6 +11,7 @@ Point at any configured web UI, leave spatial notes, and send one visible implem
 
 The extension silently reuses an existing Sligo Access session and shows the Access dialog only when sign-in is actually required. The panel links to the resulting Discord thread.
 The page remains fully interactive until you press **+**. Drag the panel by its title bar or collapse it with the header chevron when it covers the page.
+After a successful submission, the sent notes clear automatically while the Discord link remains available.
 
 ## How it routes
 
