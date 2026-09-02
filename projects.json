@@ -4,9 +4,9 @@
   "projects": [
     {
       "name": "PID Production",
-      "productionHosts": ["pid.sligolabs.com"],
+      "productionHosts": ["pid.sligolabs.com", "pid.sligo-labs.vercel.app"],
       "previewHostPatterns": [
-        "^pid(?:\\.|-[a-z0-9]{6,20}-)sligo-labs\\.vercel\\.app$",
+        "^pid-[a-z0-9]{6,20}-sligo-labs\\.vercel\\.app$",
         "^pid-git-[a-z0-9-]+-sligo-labs\\.vercel\\.app$"
       ],
       "discordParentChannelId": "1505275259006484570",
@@ -14,9 +14,9 @@
     },
     {
       "name": "PID Chatbot",
-      "productionHosts": ["pid-chatbot.sligolabs.com"],
+      "productionHosts": ["pid-chatbot.sligolabs.com", "pid-chatbot.sligo-labs.vercel.app"],
       "previewHostPatterns": [
-        "^pid-chatbot(?:\\.|-[a-z0-9]{6,20}-)sligo-labs\\.vercel\\.app$",
+        "^pid-chatbot-[a-z0-9]{6,20}-sligo-labs\\.vercel\\.app$",
         "^pid-chatbot-git-[a-z0-9-]+-sligo-labs\\.vercel\\.app$"
       ],
       "discordParentChannelId": "1539490801640284200",
@@ -26,9 +26,13 @@
     },
     {
       "name": "PID Graph",
-      "productionHosts": ["pid-graph.sligolabs.com"],
+      "productionHosts": [
+        "pid-graph.sligolabs.com",
+        "pid-graph.sligo-labs.vercel.app",
+        "agora-graph.sligo-labs.vercel.app"
+      ],
       "previewHostPatterns": [
-        "^(?:pid-graph|agora-graph)(?:\\.|-[a-z0-9]{6,20}-)sligo-labs\\.vercel\\.app$",
+        "^(?:pid-graph|agora-graph)-[a-z0-9]{6,20}-sligo-labs\\.vercel\\.app$",
         "^(?:pid-graph|agora-graph)-git-[a-z0-9-]+-sligo-labs\\.vercel\\.app$"
       ],
       "discordParentChannelId": "1539490874956709888",
@@ -36,9 +40,9 @@
     },
     {
       "name": "PID Newsletter",
-      "productionHosts": ["pid-newsletter.sligolabs.com"],
+      "productionHosts": ["pid-newsletter.sligolabs.com", "pid-newsletter.sligo-labs.vercel.app"],
       "previewHostPatterns": [
-        "^pid-newsletter(?:\\.|-[a-z0-9]{6,20}-)sligo-labs\\.vercel\\.app$",
+        "^pid-newsletter-[a-z0-9]{6,20}-sligo-labs\\.vercel\\.app$",
         "^pid-newsletter-git-[a-z0-9-]+-sligo-labs\\.vercel\\.app$"
       ],
       "discordParentChannelId": "1539490903553474622",
@@ -46,9 +50,13 @@
     },
     {
       "name": "PID Map",
-      "productionHosts": ["pid-map.sligolabs.com"],
+      "productionHosts": [
+        "pid-map.sligolabs.com",
+        "pid-map.sligo-labs.vercel.app",
+        "agora-electability.sligo-labs.vercel.app"
+      ],
       "previewHostPatterns": [
-        "^(?:pid-map|agora-electability)(?:\\.|-[a-z0-9]{6,20}-)sligo-labs\\.vercel\\.app$",
+        "^(?:pid-map|agora-electability)-[a-z0-9]{6,20}-sligo-labs\\.vercel\\.app$",
         "^(?:pid-map|agora-electability)-git-[a-z0-9-]+-sligo-labs\\.vercel\\.app$"
       ],
       "discordParentChannelId": "1539490932863533096",
