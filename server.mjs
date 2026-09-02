@@ -13,6 +13,7 @@ const MAX_BODY_BYTES = 12 * 1024 * 1024;
 const MAX_SCREENSHOT_BYTES = 8 * 1024 * 1024;
 const EXTENSION_ORIGIN = "chrome-extension://mjdomngjkjjpfadhlhcobkefhdfgfdkp";
 const EXTENSION_AUTH_REDIRECT = "https://mjdomngjkjjpfadhlhcobkefhdfgfdkp.chromiumapp.org/";
+const PASSIVE_SUBMITTER = "passive@example.test";
 
 export function validateSubmission(value) {
   if (!value || typeof value !== "object") throw new Error("Invalid feedback payload.");
@@ -96,9 +97,12 @@ export function resolveProject(pageUrl, config) {
   throw new Error(`No feedback project is configured for ${hostname}.`);
 }
 
-export function buildDiscordContent(feedback, config, project) {
+export function buildDiscordContent(feedback, config, project, senderEmail = "") {
   const title = escapeDiscord(feedback.page.title || project.name);
-  const lines = [`<@${config.botId}> **UI feedback · ${title}**`, `<${feedback.page.url}>`, ""];
+  const mention = senderEmail === PASSIVE_SUBMITTER ? "" : `<@${config.botId}> `;
+  const lines = [`${mention}**UI feedback · ${title}**`];
+  if (senderEmail) lines.push(`Submitted by ${escapeDiscord(senderEmail)}`);
+  lines.push(`<${feedback.page.url}>`, "");
   let shown = 0;
   for (const [index, note] of feedback.annotations.entries()) {
     const line = `${index + 1}. ${escapeDiscord(note.message).replace(/\s+/g, " ")}`;
@@ -135,7 +139,8 @@ export function createFeedbackServer({
     if (request.headers.origin !== EXTENSION_ORIGIN) {
       return json(response, 403, { error: "Only the Hermes UI Feedback extension may submit feedback." });
     }
-    if (requireAccess && !request.headers["cf-access-jwt-assertion"]) {
+    const senderEmail = accessEmail(request.headers["cf-access-jwt-assertion"]);
+    if (requireAccess && !senderEmail) {
       return json(response, 401, { error: "Sign in to Sligo Access, then send again." });
     }
 
@@ -146,7 +151,7 @@ export function createFeedbackServer({
         ? await findPreviewThread(project, feedback.page.url, hermes).catch(() => null)
         : null;
       const webhookEnv = preview && project.previewWebhookEnv ? project.previewWebhookEnv : project.webhookEnv;
-      const result = await postFeedback({ feedback, config, project, threadId, webhookEnv });
+      const result = await postFeedback({ feedback, config, project, threadId, webhookEnv, senderEmail });
       json(response, 201, {
         id: result.id,
         permalink: `https://discord.com/channels/${config.guildId}/${result.channel_id}/${result.id}`,
@@ -195,7 +200,7 @@ async function runDiscord(hermes, args) {
   return JSON.parse(stdout);
 }
 
-async function postFeedback({ feedback, config, project, threadId, webhookEnv }) {
+async function postFeedback({ feedback, config, project, threadId, webhookEnv, senderEmail }) {
   const webhook = process.env[webhookEnv];
   if (!webhook) throw new Error(`${project.name} feedback webhook is not configured.`);
   const endpoint = new URL(webhook);
@@ -208,14 +213,15 @@ async function postFeedback({ feedback, config, project, threadId, webhookEnv })
     schemaVersion: 1,
     batchId,
     submittedAt: new Date().toISOString(),
+    submittedBy: senderEmail,
     project: project.name,
     page: feedback.page,
     viewport: feedback.viewport,
     annotations: feedback.annotations,
   };
   const payload = {
-    content: buildDiscordContent(feedback, config, project),
-    allowed_mentions: { parse: [], users: [config.botId] },
+    content: buildDiscordContent(feedback, config, project, senderEmail),
+    allowed_mentions: { parse: [], users: senderEmail === PASSIVE_SUBMITTER ? [] : [config.botId] },
     attachments: [
       { id: 0, filename: "feedback.json", description: "Structured UI feedback" },
       { id: 1, filename: "screenshot.png", description: "Visible page at submission" },
@@ -249,6 +255,16 @@ function setCors(request, response) {
   }
   response.setHeader("access-control-allow-methods", "GET, POST, OPTIONS");
   response.setHeader("access-control-allow-headers", "content-type");
+}
+
+function accessEmail(assertion) {
+  if (typeof assertion !== "string") return "";
+  try {
+    const email = JSON.parse(Buffer.from(assertion.split(".")[1], "base64url").toString()).email;
+    return boundedString(email, 320).toLowerCase();
+  } catch {
+    return "";
+  }
 }
 
 function readBody(request) {
