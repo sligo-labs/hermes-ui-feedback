@@ -57,6 +57,9 @@ test("builds one safe human summary and rejects invalid screenshots", () => {
   assert.match(content, /^<@1535453212637667368>/);
   assert.match(content, /Move this to the left/);
   assert.match(content, /＠everyone/);
+  const passive = buildDiscordContent(feedback, config, resolveProject(feedback.page.url, config).project, "passive@example.test");
+  assert.doesNotMatch(passive, /^<@1535453212637667368>/);
+  assert.ok(passive.includes("Submitted by john＠iwaniec\\.com"));
   assert.throws(
     () => validateSubmission({ ...valid, screenshot: "data:image/png;base64,aGVsbG8=" }),
     /valid PNG/,
