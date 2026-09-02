@@ -60,7 +60,7 @@ test("builds one safe human summary and rejects invalid screenshots", () => {
   const passive = buildDiscordContent(feedback, config, resolveProject(feedback.page.url, config).project, "passive@example.test");
   assert.doesNotMatch(passive, /^<@1535453212637667368>/);
   assert.ok(passive.includes("Submitted by john＠iwaniec\\.com"));
-  assert.doesNotMatch(
+  assert.match(
     buildDiscordContent(feedback, config, resolveProject(feedback.page.url, config).project, "reviewer@example.test"),
     /^<@1535453212637667368>/,
   );
