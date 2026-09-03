@@ -214,7 +214,7 @@
 
   function saveDraft() {
     const message = textarea.value.trim();
-    if (!message || !state.draft) return;
+    if (!message || !state.draft) return false;
     state.notes.push({
       id: crypto.randomUUID?.() ?? `${Date.now()}-${Math.random()}`,
       message: message.slice(0, 2000),
@@ -223,6 +223,7 @@
     markDirty();
     cancelDraft();
     persist();
+    return true;
   }
 
   function removeNote(id) {
@@ -233,15 +234,21 @@
   }
 
   function clearNotes() {
-    if (state.busy || !state.notes.length) return;
+    if (state.busy) return;
     state.notes = [];
+    state.draft = null;
+    draftBox.classList.add("hidden");
+    textarea.value = "";
     markDirty();
     persist();
-    render();
+    setAnnotating(true);
   }
 
   async function send() {
-    if (state.busy || state.submitted || !state.notes.length) return;
+    if (state.busy || state.submitted) return;
+    if (state.draft && textarea.value.trim()) saveDraft();
+    else if (state.draft) cancelDraft();
+    if (!state.notes.length) return;
     state.busy = true;
     state.error = "";
     state.result = "";
@@ -292,11 +299,12 @@
   }
 
   function render() {
+    const hasDraftMessage = Boolean(state.draft && textarea.value.trim());
     countLabel.textContent = `${state.notes.length} ${state.notes.length === 1 ? "note" : "notes"}`;
     addButton.disabled = state.busy || Boolean(state.draft);
-    sendButton.disabled = state.busy || state.submitted || !state.notes.length || Boolean(state.draft);
+    sendButton.disabled = state.busy || state.submitted || (!state.notes.length && !hasDraftMessage);
     sendButton.textContent = state.busy ? "Sending…" : state.submitted ? "Sent" : "Send to Hermes";
-    clearButton.disabled = state.busy || !state.notes.length || Boolean(state.draft);
+    clearButton.disabled = state.busy || (!state.notes.length && !state.draft && !state.submitted && !state.error);
     notesWrap.replaceChildren();
     notesWrap.classList.toggle("hidden", Boolean(state.draft) && !state.notes.length);
     if (state.notes.length) {
@@ -497,6 +505,7 @@
       saveDraft();
     }
   });
+  textarea.addEventListener("input", render);
   clearButton.addEventListener("click", clearNotes);
   sendButton.addEventListener("click", send);
 
@@ -505,5 +514,5 @@
     state.notes = Array.isArray(saved?.notes) ? saved.notes : [];
     render();
   });
-  render();
+  setAnnotating(true);
 })();
