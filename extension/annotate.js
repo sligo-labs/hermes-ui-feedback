@@ -26,14 +26,14 @@
       :host { all: initial; }
       * { box-sizing: border-box; }
       .layer { position: fixed; inset: 0; z-index: 2147483647; pointer-events: none; color: #e5edf8; font: 13px/1.45 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
-      button, textarea { font: inherit; }
+      button { font: inherit; }
       button { cursor: pointer; }
       .hidden { display: none !important; }
       .target { position: fixed; border: 2px solid #38bdf8; background: rgb(56 189 248 / 9%); box-shadow: 0 0 0 2px rgb(2 8 23 / 75%); pointer-events: none; transition: inset 60ms linear; }
       .pin { position: fixed; display: grid; place-items: center; width: 26px; height: 26px; border: 2px solid #f8fafc; border-radius: 999px; background: #0284c7; color: white; box-shadow: 0 3px 12px rgb(2 8 23 / 55%); font-weight: 800; pointer-events: none; transform: translate(-50%, -50%); }
       .panel button { min-height: 32px; padding: 6px 10px; border: 1px solid #334155; border-radius: 5px; background: #172033; color: #dbeafe; }
       .panel button:hover { border-color: #64748b; background: #22304a; }
-      .panel button:focus-visible, textarea:focus-visible { outline: 2px solid #38bdf8; outline-offset: 2px; }
+      .panel button:focus-visible { outline: 2px solid #38bdf8; outline-offset: 2px; }
       .active, .primary { border-color: #38bdf8 !important; background: #0369a1 !important; color: white !important; }
       .panel { position: fixed; top: 16px; right: 16px; width: min(370px, calc(100vw - 32px)); max-height: calc(100vh - 32px); overflow: auto; border: 1px solid #334155; border-radius: 8px; background: #0b1220; box-shadow: 0 12px 36px rgb(2 8 23 / 55%); pointer-events: auto; }
       .panel.collapsed { width: auto; }
@@ -51,7 +51,7 @@
       .remove { align-self: start; min-height: 24px !important; padding: 2px 7px !important; color: #94a3b8 !important; }
       .draft { padding: 11px 12px; border-bottom: 1px solid #263247; background: #0f1828; }
       .draft-label { display: block; margin-bottom: 7px; color: #94a3b8; font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-      textarea { display: block; width: 100%; min-height: 92px; resize: vertical; padding: 9px 10px; border: 1px solid #475569; border-radius: 5px; background: #111c2e; color: #f8fafc; }
+      .note-frame { display: block; width: 100%; height: 92px; border: 0; border-radius: 5px; background: #111c2e; }
       .draft-actions { display: flex; justify-content: flex-end; gap: 7px; margin-top: 8px; }
       .panel-actions { display: flex; align-items: center; gap: 7px; padding: 10px 12px; border-top: 1px solid #263247; }
       .add { flex: 0 0 32px; width: 32px; margin-right: auto; padding: 0 !important; font-size: 20px; line-height: 1; }
@@ -71,7 +71,7 @@
         <div class="panel-header" title="Drag to move"><h2>Hermes feedback</h2><span class="panel-head-actions"><span class="count-label" aria-live="polite"></span><button class="panel-toggle" type="button" aria-expanded="true" aria-label="Collapse feedback panel">▾</button><button class="panel-close" type="button" aria-label="Hide Hermes feedback">×</button></span></div>
         <div class="draft hidden" role="group" aria-label="Add UI feedback">
           <span class="draft-label"></span>
-          <textarea placeholder="What should change?"></textarea>
+          <iframe class="note-frame" title="Feedback note"></iframe>
           <div class="draft-actions"><button class="cancel" type="button">Cancel</button><button class="save primary" type="button">Add note</button></div>
         </div>
         <div class="notes-wrap"></div>
@@ -103,7 +103,20 @@
   const resultLink = $(".result-link");
   const draftBox = $(".draft");
   const draftLabel = $(".draft-label");
-  const textarea = $("textarea");
+  const noteFrame = $(".note-frame");
+  const noteDocument = noteFrame.contentDocument;
+  const noteStyle = noteDocument.createElement("style");
+  noteStyle.textContent = `
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; background: #111c2e; }
+    textarea { display: block; width: 100%; height: 100%; resize: none; padding: 9px 10px; border: 1px solid #475569; border-radius: 5px; outline: 0; background: #111c2e; color: #f8fafc; font: 13px/1.45 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    textarea:focus-visible { border-color: #38bdf8; outline: 2px solid #38bdf8; outline-offset: -2px; }
+  `;
+  const textarea = noteDocument.createElement("textarea");
+  textarea.placeholder = "What should change?";
+  textarea.setAttribute("aria-label", "What should change?");
+  noteDocument.head.append(noteStyle);
+  noteDocument.body.append(textarea);
   let drag;
 
   function movePanel(event) {
@@ -512,8 +525,6 @@
       saveDraft();
     }
   });
-  textarea.addEventListener("keypress", (event) => event.stopPropagation());
-  textarea.addEventListener("keyup", (event) => event.stopPropagation());
   textarea.addEventListener("input", render);
   clearButton.addEventListener("click", clearNotes);
   sendButton.addEventListener("click", send);
