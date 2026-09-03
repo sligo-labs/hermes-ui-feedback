@@ -223,6 +223,7 @@
     markDirty();
     cancelDraft();
     persist();
+    setAnnotating(true);
     return true;
   }
 
@@ -479,7 +480,7 @@
   document.addEventListener("pointermove", handlePointerMove, true);
   document.addEventListener("click", handleClick, true);
   document.addEventListener("keydown", (event) => {
-    if (!state.visible) return;
+    if (!state.visible || overlayEvent(event)) return;
     if (event.key === "Escape") {
       if (state.draft) cancelDraft();
       else setAnnotating(false);
@@ -500,11 +501,19 @@
   $(".cancel").addEventListener("click", cancelDraft);
   $(".save").addEventListener("click", saveDraft);
   textarea.addEventListener("keydown", (event) => {
+    event.stopPropagation();
+    if (event.key === "Escape") {
+      event.preventDefault();
+      cancelDraft();
+      return;
+    }
     if (event.key === "Enter" && !event.shiftKey && !event.isComposing) {
       event.preventDefault();
       saveDraft();
     }
   });
+  textarea.addEventListener("keypress", (event) => event.stopPropagation());
+  textarea.addEventListener("keyup", (event) => event.stopPropagation());
   textarea.addEventListener("input", render);
   clearButton.addEventListener("click", clearNotes);
   sendButton.addEventListener("click", send);
