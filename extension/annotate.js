@@ -165,6 +165,7 @@
 
   function setAnnotating(value) {
     state.annotating = value;
+    if (value && !state.draft) openGeneralDraft();
     addButton.classList.toggle("active", value);
     addButton.setAttribute("aria-pressed", String(value));
     document.documentElement.style.cursor = value ? "crosshair" : "";
@@ -185,14 +186,14 @@
   }
 
   function handlePointerMove(event) {
-    if (!state.visible || !state.annotating || state.draft || overlayEvent(event)) return;
+    if (!state.visible || !state.annotating || (state.draft && state.draft.context.kind !== "note") || overlayEvent(event)) return;
     state.hovered = normalizeTarget(event.target);
     renderTarget();
   }
 
   function handleClick(event) {
     if (!state.visible || overlayEvent(event)) return;
-    if (state.draft) {
+    if (state.draft && state.draft.context.kind !== "note") {
       event.preventDefault();
       event.stopImmediatePropagation();
       cancelDraft();
@@ -204,16 +205,16 @@
     if (!element) return;
     event.preventDefault();
     event.stopImmediatePropagation();
-    openDraft(element);
+    openDraft(element, state.draft?.context.kind === "note" ? textarea.value : "");
   }
 
-  function openDraft(element) {
+  function openDraft(element, message = "") {
     state.draft = { element, context: elementContext(element) };
     setAnnotating(false);
     setPanelCollapsed(false);
     draftLabel.textContent = state.draft.context.component || state.draft.context.label;
     draftBox.classList.remove("hidden");
-    textarea.value = "";
+    textarea.value = message;
     textarea.focus();
     render();
   }
@@ -223,7 +224,6 @@
       element: null,
       context: { kind: "note", url: location.href, selector: "", component: "", label: "General note", html: "", rect: {} },
     };
-    setAnnotating(false);
     setPanelCollapsed(false);
     draftLabel.textContent = "General note";
     draftBox.classList.remove("hidden");
@@ -233,9 +233,11 @@
   }
 
   function cancelDraft() {
+    const wasGeneral = state.draft?.context.kind === "note";
     state.draft = null;
     draftBox.classList.add("hidden");
     textarea.value = "";
+    if (wasGeneral) state.annotating = false;
     render();
   }
 
@@ -252,6 +254,7 @@
     persist();
     if (keepOpen) {
       textarea.value = "";
+      setAnnotating(true);
       render();
       textarea.focus();
       return true;
@@ -317,6 +320,7 @@
     state.busy = false;
     state.submitted = true;
     state.notes = [];
+    cancelDraft();
     persist();
     state.resultUrl = response.permalink;
     state.result = response.routedTo === "preview-thread"
@@ -336,7 +340,7 @@
   function render() {
     const hasDraftMessage = Boolean(state.draft && textarea.value.trim());
     countLabel.textContent = `${state.notes.length} ${state.notes.length === 1 ? "note" : "notes"}`;
-    addButton.disabled = state.busy || Boolean(state.draft);
+    addButton.disabled = state.busy;
     sendButton.disabled = state.busy || state.submitted || (!state.notes.length && !hasDraftMessage);
     sendButton.textContent = state.busy ? "Sending…" : state.submitted ? "Sent" : "Send to Hermes";
     clearButton.disabled = state.busy || (!state.notes.length && !state.draft && !state.submitted && !state.error);
@@ -531,8 +535,9 @@
   });
 
   addButton.addEventListener("click", () => {
-    if (state.annotating) openGeneralDraft();
-    else setAnnotating(true);
+    if (state.draft?.context.kind !== "note") cancelDraft();
+    setAnnotating(true);
+    textarea.focus();
   });
   $(".panel-close").addEventListener("click", toggle);
   $(".cancel").addEventListener("click", cancelDraft);
