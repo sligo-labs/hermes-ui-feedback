@@ -54,7 +54,8 @@
       .note-frame { display: block; width: 100%; height: 92px; border: 0; border-radius: 5px; background: #111c2e; }
       .draft-actions { display: flex; justify-content: flex-end; gap: 7px; margin-top: 8px; }
       .panel-actions { display: flex; align-items: center; gap: 7px; padding: 10px 12px; border-top: 1px solid #263247; }
-      .add { flex: 0 0 32px; width: 32px; margin-right: auto; padding: 0 !important; font-size: 20px; line-height: 1; }
+      .add, .general { flex: 0 0 32px; width: 32px; padding: 0 !important; font-size: 18px; line-height: 1; }
+      .general { margin-right: auto; }
       .error { margin: 0; padding: 10px 12px; border-top: 1px solid #7f1d1d; background: #2a1118; color: #fecaca; white-space: pre-wrap; }
       .result { display: flex; align-items: center; gap: 9px; margin: 0; padding: 11px 12px; border-top: 1px solid #14532d; background: #0c1f19; color: #bbf7d0; font-size: 12px; white-space: pre-wrap; }
       .sent-check { display: grid; flex: 0 0 24px; place-items: center; width: 24px; height: 24px; border-radius: 999px; background: #16a34a; color: white; font-weight: 900; }
@@ -79,6 +80,7 @@
         <div class="result hidden"><span class="sent-check" aria-hidden="true">✓</span><span><span class="result-text"></span><br><a class="result-link" target="_blank" rel="noreferrer">Open Discord thread</a></span></div>
         <div class="panel-actions">
           <button class="add" type="button" aria-label="Add annotation" aria-pressed="false" title="Annotate next click">+</button>
+          <button class="general" type="button" aria-label="Add general note" title="Add note about the page">✎</button>
           <button class="clear" type="button">Clear</button>
           <button class="send primary" type="button">Send to Hermes</button>
         </div>
@@ -94,6 +96,7 @@
   const pins = $(".pins");
   const notesWrap = $(".notes-wrap");
   const addButton = $(".add");
+  const generalButton = $(".general");
   const sendButton = $(".send");
   const clearButton = $(".clear");
   const countLabel = $(".count-label");
@@ -218,6 +221,20 @@
     render();
   }
 
+  function openGeneralDraft() {
+    state.draft = {
+      element: null,
+      context: { kind: "note", url: location.href, selector: "", component: "", label: "General note", html: "", rect: {} },
+    };
+    setAnnotating(false);
+    setPanelCollapsed(false);
+    draftLabel.textContent = "General note";
+    draftBox.classList.remove("hidden");
+    textarea.value = "";
+    textarea.focus();
+    render();
+  }
+
   function cancelDraft() {
     state.draft = null;
     draftBox.classList.add("hidden");
@@ -316,6 +333,7 @@
     const hasDraftMessage = Boolean(state.draft && textarea.value.trim());
     countLabel.textContent = `${state.notes.length} ${state.notes.length === 1 ? "note" : "notes"}`;
     addButton.disabled = state.busy || Boolean(state.draft);
+    generalButton.disabled = state.busy || Boolean(state.draft);
     sendButton.disabled = state.busy || state.submitted || (!state.notes.length && !hasDraftMessage);
     sendButton.textContent = state.busy ? "Sending…" : state.submitted ? "Sent" : "Send to Hermes";
     clearButton.disabled = state.busy || (!state.notes.length && !state.draft && !state.submitted && !state.error);
@@ -336,7 +354,7 @@
         message.textContent = note.message;
         const context = document.createElement("div");
         context.className = "note-context";
-        context.textContent = note.component || note.selector;
+        context.textContent = note.component || note.selector || "General note";
         const remove = document.createElement("button");
         remove.className = "remove";
         remove.type = "button";
@@ -510,6 +528,7 @@
   });
 
   addButton.addEventListener("click", () => setAnnotating(!state.annotating));
+  generalButton.addEventListener("click", openGeneralDraft);
   $(".panel-close").addEventListener("click", toggle);
   $(".cancel").addEventListener("click", cancelDraft);
   $(".save").addEventListener("click", saveDraft);
