@@ -242,14 +242,21 @@
   function saveDraft() {
     const message = textarea.value.trim();
     if (!message || !state.draft) return false;
+    const keepOpen = state.draft.context.kind === "note";
     state.notes.push({
       id: crypto.randomUUID?.() ?? `${Date.now()}-${Math.random()}`,
       message: message.slice(0, 2000),
       ...state.draft.context,
     });
     markDirty();
-    cancelDraft();
     persist();
+    if (keepOpen) {
+      textarea.value = "";
+      render();
+      textarea.focus();
+      return true;
+    }
+    cancelDraft();
     setAnnotating(true);
     return true;
   }
