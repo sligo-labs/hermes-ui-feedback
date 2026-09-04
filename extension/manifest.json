@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Hermes UI Feedback",
-  "version": "0.3.6",
+  "version": "0.3.7",
   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAuCBIOTmFSlBAPWLvHeD+mlTs8tXeH2pSeVObm12I9D+gO3K1mMu3nHjjxjNdOzcwRelsSMrjQ25Dfw2e9Oxg3Beh6MtEc3fN1i5V+XEarlS6FVZlWTTcEB9NxKxRY96D+v90SVDyUjAXcHtoUirqh5WRTq6atR0TF3B+VlorH6WJGzM/kxZc3gsxQPADBFeu6oo/7h9JpOd+JlzTVfjmI/kFTjCdH5xIFysM8tjw7ZXpJsZpb3pjy81vQmcTl3U+no5JouFJRvZxEqln89Jn3k4xSyhw+nMjuKQOjtf7tCoaad8b64ysUDWS1R3pmWleXKRmpM52Y6felQePdR3JrQIDAQAB",
   "description": "Point at UI, leave spatial notes, and send one implementation task to Hermes.",
   "minimum_chrome_version": "116",
