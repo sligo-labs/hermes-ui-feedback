@@ -27,12 +27,14 @@ export function validateSubmission(value) {
     if (!note || typeof note !== "object") throw new Error(`Annotation ${index + 1} is invalid.`);
     const message = boundedString(note.message, 2000);
     const selector = boundedString(note.selector, 2000);
+    const kind = note.kind === "note" ? "note" : "annotation";
     const noteUrl = httpUrl(note.url, `Annotation ${index + 1}`);
-    if (!message || !selector || noteUrl.origin !== parsedUrl.origin) {
+    if (!message || (kind === "annotation" && !selector) || noteUrl.origin !== parsedUrl.origin) {
       throw new Error(`Annotation ${index + 1} is incomplete or belongs to another site.`);
     }
     return {
       id: boundedString(note.id, 100),
+      kind,
       message,
       url: noteUrl.href,
       selector,

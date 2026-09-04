@@ -32,6 +32,12 @@ const config = loadProjects(new URL("./projects.json", import.meta.url));
 test("validates feedback and routes production and preview hosts", () => {
   const feedback = validateSubmission(valid);
   assert.equal(feedback.annotations[0].component, "Toolbar");
+  const general = validateSubmission({
+    ...valid,
+    annotations: [{ kind: "note", message: "Keep the page-level context in mind.", url: valid.page.url }],
+  });
+  assert.equal(general.annotations[0].kind, "note");
+  assert.equal(general.annotations[0].selector, "");
   assert.equal(resolveProject(feedback.page.url, config).preview, false);
   const preview = resolveProject("https://pid-chatbot-git-feature-congress-expandable-member-rows-sligo-labs.vercel.app", config);
   assert.equal(preview.preview, true);
