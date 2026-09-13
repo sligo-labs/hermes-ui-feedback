@@ -283,7 +283,7 @@
     openGeneralDraft();
     markDirty();
     persist();
-    setAnnotating(true);
+    setAnnotating(false);
   }
 
   async function send() {
@@ -568,5 +568,5 @@
     render();
   });
   openGeneralDraft();
-  setAnnotating(true);
+  setAnnotating(false);
 })();
