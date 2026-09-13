@@ -76,8 +76,12 @@ async function latestReleaseStatus() {
   const installed = chrome.runtime.getManifest().version;
   const cached = await chrome.storage.local.get(VERSION_CACHE_KEY);
   const cachedStatus = cached[VERSION_CACHE_KEY];
-  if (cachedStatus?.checkedAt && Date.now() - cachedStatus.checkedAt < VERSION_CACHE_TTL) {
-    return cachedStatus;
+  if (cachedStatus?.latest && cachedStatus.checkedAt && Date.now() - cachedStatus.checkedAt < VERSION_CACHE_TTL) {
+    return {
+      ...cachedStatus,
+      installed,
+      updateAvailable: isNewerVersion(cachedStatus.latest, installed),
+    };
   }
 
   try {
