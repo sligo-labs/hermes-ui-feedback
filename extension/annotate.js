@@ -261,7 +261,6 @@
     persist();
     if (keepOpen) {
       textarea.value = "";
-      setAnnotating(true);
       render();
       textarea.focus();
       return true;
