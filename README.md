@@ -28,3 +28,9 @@ The service strips input values, inline event handlers, `srcdoc`, and nonces fro
 Add one entry to `projects.json` with production hostnames, optional preview-host regular expressions, and each route's Discord parent channel plus webhook environment variable. Restart the service after changing the file.
 
 The server uses only Node.js built-ins and the installed read-only `hermes discord` CLI for preview-thread lookup.
+
+## Security
+
+The deployed bridge is protected by Cloudflare Access. The extension origin
+check is only an integration guard; it is not a substitute for Access. Keep
+Discord webhook values in the deployment environment, never in this repository.
