@@ -29,6 +29,10 @@ Add one entry to `projects.json` with production hostnames, optional preview-hos
 
 The server uses only Node.js built-ins and the installed read-only `hermes discord` CLI for preview-thread lookup.
 
+The extension checks GitHub's public latest-release endpoint periodically and
+shows an update link in the panel when a newer version is available. It caches
+the result for six hours and sends no credentials to GitHub.
+
 ## Security
 
 The deployed bridge is protected by Cloudflare Access. The extension origin

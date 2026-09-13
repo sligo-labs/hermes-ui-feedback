@@ -42,10 +42,14 @@
       .panel-header:active { cursor: grabbing; }
       .panel-head-actions { display: flex; align-items: center; gap: 15px; }
       .panel-toggle, .panel-close { min-width: 57px; min-height: 54px !important; padding: 5px 14px !important; color: #94a3b8 !important; font-size: 30px; line-height: 1; }
+      .panel-title { display: flex; min-width: 0; flex-direction: column; align-items: flex-start; gap: 6px; }
       h2 { margin: 0; color: #f8fafc; font: 700 24px/1.2 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; letter-spacing: .04em; text-transform: uppercase; }
       h2 a { color: inherit; text-decoration: none; }
       h2 a:hover { color: #7dd3fc; }
       h2 a:focus-visible { outline: 3px solid #38bdf8; outline-offset: 4px; border-radius: 3px; }
+      .update-link { color: #fca5a5; font-size: 18px; font-weight: 700; text-decoration: none; }
+      .update-link:hover { color: #fecaca; text-decoration: underline; }
+      .update-link:focus-visible { outline: 3px solid #38bdf8; outline-offset: 4px; border-radius: 3px; }
       .notes { display: grid; gap: 1px; margin: 0; padding: 0; list-style: none; background: #263247; }
       .note { display: grid; grid-template-columns: 51px 1fr auto; gap: 18px; padding: 24px 27px; background: #0f1828; }
       .note-index { display: grid; place-items: center; width: 48px; height: 48px; border-radius: 999px; background: #0369a1; color: white; font-weight: 800; }
@@ -80,7 +84,7 @@
       <div class="target hidden"></div>
       <div class="pins"></div>
       <section class="panel" aria-label="Hermes UI feedback">
-        <div class="panel-header" title="Drag to move"><h2><a href="https://github.com/sligo-labs/hermes-ui-feedback/releases/latest" target="_blank" rel="noreferrer" aria-label="Hermes Feedback latest release">Hermes feedback</a></h2><span class="panel-head-actions"><span class="count-label" aria-live="polite"></span><button class="panel-toggle" type="button" aria-expanded="true" aria-label="Collapse feedback panel">▾</button><button class="panel-close" type="button" aria-label="Hide Hermes feedback">×</button></span></div>
+        <div class="panel-header" title="Drag to move"><span class="panel-title"><h2><a href="https://github.com/sligo-labs/hermes-ui-feedback/releases/latest" target="_blank" rel="noreferrer" aria-label="Hermes Feedback latest release">Hermes feedback</a></h2><a class="update-link hidden" href="https://github.com/sligo-labs/hermes-ui-feedback/releases/latest" target="_blank" rel="noreferrer">Update available!</a></span><span class="panel-head-actions"><span class="count-label" aria-live="polite"></span><button class="panel-toggle" type="button" aria-expanded="true" aria-label="Collapse feedback panel">▾</button><button class="panel-close" type="button" aria-label="Hide Hermes feedback">×</button></span></div>
         <div class="draft hidden" role="group" aria-label="Add UI feedback">
           <span class="draft-label"></span>
           <iframe class="note-frame" title="Feedback note"></iframe>
@@ -113,6 +117,7 @@
   const resultBox = $(".result");
   const resultText = $(".result-text");
   const resultLink = $(".result-link");
+  const updateLink = $(".update-link");
   const draftBox = $(".draft");
   const draftLabel = $(".draft-label");
   const noteFrame = $(".note-frame");
@@ -570,6 +575,11 @@
     state.notes = Array.isArray(saved?.notes) ? saved.notes : [];
     render();
   });
+  chrome.runtime.sendMessage({ type: "version-status" }).then((status) => {
+    if (!status?.updateAvailable) return;
+    updateLink.textContent = `Update available! (v${status.latest})`;
+    updateLink.classList.remove("hidden");
+  }).catch(() => {});
   openGeneralDraft();
   setAnnotating(false);
 })();
