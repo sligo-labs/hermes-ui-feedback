@@ -13,7 +13,7 @@ const MAX_BODY_BYTES = 12 * 1024 * 1024;
 const MAX_SCREENSHOT_BYTES = 8 * 1024 * 1024;
 const EXTENSION_ORIGIN = "chrome-extension://mjdomngjkjjpfadhlhcobkefhdfgfdkp";
 const EXTENSION_AUTH_REDIRECT = "https://mjdomngjkjjpfadhlhcobkefhdfgfdkp.chromiumapp.org/";
-const PASSIVE_SUBMITTER = "passive@example.test";
+const PASSIVE_SUBMITTER_ENV = "FEEDBACK_PASSIVE_SUBMITTER_EMAIL";
 
 export function validateSubmission(value) {
   if (!value || typeof value !== "object") throw new Error("Invalid feedback payload.");
@@ -101,7 +101,7 @@ export function resolveProject(pageUrl, config) {
 
 export function buildDiscordContent(feedback, config, project, senderEmail = "") {
   const title = escapeDiscord(feedback.page.title || project.name);
-  const mention = senderEmail === PASSIVE_SUBMITTER ? "" : `<@${config.botId}> `;
+  const mention = isPassiveSubmitter(senderEmail) ? "" : `<@${config.botId}> `;
   const lines = [`${mention}**UI feedback · ${title}**`];
   if (senderEmail) lines.push(`Submitted by ${escapeDiscord(senderEmail)}`);
   lines.push(`<${feedback.page.url}>`, "");
@@ -223,7 +223,7 @@ async function postFeedback({ feedback, config, project, threadId, webhookEnv, s
   };
   const payload = {
     content: buildDiscordContent(feedback, config, project, senderEmail),
-    allowed_mentions: { parse: [], users: senderEmail === PASSIVE_SUBMITTER ? [] : [config.botId] },
+    allowed_mentions: { parse: [], users: isPassiveSubmitter(senderEmail) ? [] : [config.botId] },
     attachments: [
       { id: 0, filename: "feedback.json", description: "Structured UI feedback" },
       { id: 1, filename: "screenshot.png", description: "Visible page at submission" },
@@ -267,6 +267,11 @@ function accessEmail(assertion) {
   } catch {
     return "";
   }
+}
+
+function isPassiveSubmitter(senderEmail) {
+  const configuredEmail = boundedString(process.env[PASSIVE_SUBMITTER_ENV], 320).toLowerCase();
+  return Boolean(configuredEmail) && senderEmail === configuredEmail;
 }
 
 function readBody(request) {

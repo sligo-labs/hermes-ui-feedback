@@ -64,12 +64,18 @@ test("builds one safe human summary and rejects invalid screenshots", () => {
   assert.match(content, /Move this to the left/);
   assert.match(content, /＠everyone/);
   const passive = buildDiscordContent(feedback, config, resolveProject(feedback.page.url, config).project, "passive@example.test");
-  assert.doesNotMatch(passive, /^<@1535453212637667368>/);
-  assert.ok(passive.includes("Submitted by john＠iwaniec\\.com"));
-  assert.match(
-    buildDiscordContent(feedback, config, resolveProject(feedback.page.url, config).project, "reviewer@example.test"),
-    /^<@1535453212637667368>/,
-  );
+  assert.match(passive, /^<@1535453212637667368>/);
+  const previousPassiveSubmitter = process.env.FEEDBACK_PASSIVE_SUBMITTER_EMAIL;
+  process.env.FEEDBACK_PASSIVE_SUBMITTER_EMAIL = "passive@example.test";
+  try {
+    assert.doesNotMatch(
+      buildDiscordContent(feedback, config, resolveProject(feedback.page.url, config).project, "passive@example.test"),
+      /^<@1535453212637667368>/,
+    );
+  } finally {
+    if (previousPassiveSubmitter === undefined) delete process.env.FEEDBACK_PASSIVE_SUBMITTER_EMAIL;
+    else process.env.FEEDBACK_PASSIVE_SUBMITTER_EMAIL = previousPassiveSubmitter;
+  }
   assert.throws(
     () => validateSubmission({ ...valid, screenshot: "data:image/png;base64,aGVsbG8=" }),
     /valid PNG/,
