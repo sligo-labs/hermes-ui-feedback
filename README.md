@@ -33,6 +33,8 @@ The extension checks GitHub's public latest-release endpoint periodically and
 shows an update link in the panel when a newer version is available. It caches
 the result for six hours and sends no credentials to GitHub.
 
+Each feedback attachment also records the extension version used to submit it.
+
 ## Security
 
 The deployed bridge is protected by Cloudflare Access. The extension origin

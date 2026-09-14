@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  buildFeedbackAttachment,
   buildDiscordContent,
   createFeedbackServer,
   loadProjects,
@@ -13,6 +14,7 @@ const screenshot = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAA
 const valid = {
   page: { url: "https://pid-chatbot.sligolabs.com/page", title: "Research @everyone" },
   viewport: { width: 1200, height: 800 },
+  extensionVersion: "0.3.16",
   annotations: [
     {
       message: "Move this to the left.",
@@ -32,6 +34,8 @@ const config = loadProjects(new URL("./projects.json", import.meta.url));
 test("validates feedback and routes production and preview hosts", () => {
   const feedback = validateSubmission(valid);
   assert.equal(feedback.annotations[0].component, "Toolbar");
+  assert.equal(feedback.extensionVersion, "0.3.16");
+  assert.equal(buildFeedbackAttachment(feedback, { name: "PID Chatbot" }).extensionVersion, "0.3.16");
   const general = validateSubmission({
     ...valid,
     annotations: [{ kind: "note", message: "Keep the page-level context in mind.", url: valid.page.url }],

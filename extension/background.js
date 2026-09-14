@@ -44,7 +44,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         );
         return request("/api/feedback", {
           method: "POST",
-          body: JSON.stringify({ ...message.payload, screenshot }),
+          body: JSON.stringify({
+            ...message.payload,
+            extensionVersion: chrome.runtime.getManifest().version,
+            screenshot,
+          }),
         });
       }
       default:
