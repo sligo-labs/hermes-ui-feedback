@@ -57,6 +57,7 @@ export function validateSubmission(value) {
   }
 
   return {
+    extensionVersion: boundedString(value.extensionVersion, 32),
     page: { url: parsedUrl.href, title: boundedString(value.page?.title, 500) },
     viewport: numericFields(value.viewport, ["width", "height", "devicePixelRatio"]),
     annotations,
@@ -115,6 +116,20 @@ export function buildDiscordContent(feedback, config, project, senderEmail = "")
   if (shown < feedback.annotations.length) lines.push(`…${feedback.annotations.length - shown} more in feedback.json`);
   lines.push("", "Screenshot and structured context attached.");
   return lines.join("\n");
+}
+
+export function buildFeedbackAttachment(feedback, project, senderEmail = "") {
+  return {
+    schemaVersion: 1,
+    batchId: randomUUID(),
+    submittedAt: new Date().toISOString(),
+    submittedBy: senderEmail,
+    extensionVersion: feedback.extensionVersion || "unknown",
+    project: project.name,
+    page: feedback.page,
+    viewport: feedback.viewport,
+    annotations: feedback.annotations,
+  };
 }
 
 export function createFeedbackServer({
@@ -210,17 +225,7 @@ async function postFeedback({ feedback, config, project, threadId, webhookEnv, s
     throw new Error(`${project.name} feedback webhook is not configured.`);
   }
 
-  const batchId = randomUUID();
-  const attachment = {
-    schemaVersion: 1,
-    batchId,
-    submittedAt: new Date().toISOString(),
-    submittedBy: senderEmail,
-    project: project.name,
-    page: feedback.page,
-    viewport: feedback.viewport,
-    annotations: feedback.annotations,
-  };
+  const attachment = buildFeedbackAttachment(feedback, project, senderEmail);
   const payload = {
     content: buildDiscordContent(feedback, config, project, senderEmail),
     allowed_mentions: { parse: [], users: isPassiveSubmitter(senderEmail) ? [] : [config.botId] },
