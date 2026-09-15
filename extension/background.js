@@ -42,6 +42,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           sender.tab.windowId,
           { format: "png" },
         );
+        if (tabId != null) {
+          await chrome.tabs.sendMessage(tabId, { type: "capture-complete" }).catch(() => {});
+        }
         return request("/api/feedback", {
           method: "POST",
           body: JSON.stringify({

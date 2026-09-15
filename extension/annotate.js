@@ -67,8 +67,11 @@
       .sent-check { display: grid; flex: 0 0 45px; place-items: center; width: 45px; height: 45px; border-radius: 999px; background: #16a34a; color: white; font-weight: 900; }
       .result:not(.hidden) .sent-check { animation: sent-pop 300ms ease-out; }
       .result-link { display: inline-block; margin-top: 5px; color: #7dd3fc; font-weight: 700; text-decoration: underline; }
+      .busy-indicator { position: fixed; right: 24px; bottom: 24px; display: flex; align-items: center; gap: 15px; padding: 15px 21px; border: 2px solid #38bdf8; border-radius: 8px; background: #0b1220; color: #f8fafc; box-shadow: 0 8px 24px rgb(2 8 23 / 55%); font-size: 21px; font-weight: 700; pointer-events: none; }
+      .busy-spinner { width: 24px; height: 24px; border: 3px solid #475569; border-top-color: #38bdf8; border-radius: 50%; animation: busy-spin 800ms linear infinite; }
       @keyframes sent-pop { from { opacity: 0; transform: scale(.5); } 70% { transform: scale(1.12); } }
-      @media (prefers-reduced-motion: reduce) { .sent-check { animation: none; } }
+      @keyframes busy-spin { to { transform: rotate(360deg); } }
+      @media (prefers-reduced-motion: reduce) { .sent-check, .busy-spinner { animation: none; } }
       @media (max-width: 620px) {
         .panel { top: 8px; right: 8px; width: calc(100vw - 16px); max-height: calc(100vh - 16px); }
         .panel-header { flex-wrap: wrap; }
@@ -78,11 +81,13 @@
         .panel-actions { flex-wrap: wrap; }
         .add { margin-right: 0; }
         .send { flex: 1 1 160px; }
+        .busy-indicator { right: 12px; bottom: 12px; max-width: calc(100vw - 24px); }
       }
     </style>
     <div class="layer">
       <div class="target hidden"></div>
       <div class="pins"></div>
+      <div class="busy-indicator hidden" role="status" aria-live="polite"><span class="busy-spinner" aria-hidden="true"></span><span>Sending feedback…</span></div>
       <section class="panel" aria-label="Hermes UI feedback">
         <div class="panel-header" title="Drag to move"><span class="panel-title"><h2><a href="https://github.com/sligo-labs/hermes-ui-feedback/releases/latest" target="_blank" rel="noreferrer" aria-label="Hermes Feedback latest release">Hermes feedback</a></h2><a class="update-link hidden" href="https://github.com/sligo-labs/hermes-ui-feedback/releases/latest" target="_blank" rel="noreferrer">Update available!</a></span><span class="panel-head-actions"><span class="count-label" aria-live="polite"></span><button class="panel-toggle" type="button" aria-expanded="true" aria-label="Collapse feedback panel">▾</button><button class="panel-close" type="button" aria-label="Hide Hermes feedback">×</button></span></div>
         <div class="draft hidden" role="group" aria-label="Add UI feedback">
@@ -117,6 +122,7 @@
   const resultBox = $(".result");
   const resultText = $(".result-text");
   const resultLink = $(".result-link");
+  const busyIndicator = $(".busy-indicator");
   const updateLink = $(".update-link");
   const draftBox = $(".draft");
   const draftLabel = $(".draft-label");
@@ -355,6 +361,7 @@
     addButton.disabled = state.busy;
     sendButton.disabled = state.busy || state.submitted || (!state.notes.length && !hasDraftMessage);
     sendButton.textContent = state.busy ? "Sending…" : state.submitted ? "Sent" : "Send to Hermes";
+    busyIndicator.classList.toggle("hidden", !state.busy);
     clearButton.disabled = state.busy || (!state.notes.length && !state.draft && !state.submitted && !state.error);
     notesWrap.replaceChildren();
     notesWrap.classList.toggle("hidden", Boolean(state.draft) && !state.notes.length);
@@ -544,6 +551,10 @@
   addEventListener("resize", () => { clampPanel(); renderTarget(); renderPins(); });
   chrome.runtime.onMessage.addListener((message) => {
     if (message?.type === "toggle") toggle();
+    if (message?.type === "capture-complete" && state.busy) {
+      host.style.display = "";
+      render();
+    }
   });
 
   addButton.addEventListener("click", () => {
