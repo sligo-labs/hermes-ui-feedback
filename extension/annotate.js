@@ -572,6 +572,11 @@
       cancelDraft();
       return;
     }
+    if (event.key === "Enter" && event.metaKey && !event.isComposing) {
+      event.preventDefault();
+      send();
+      return;
+    }
     if (event.key === "Enter" && !event.shiftKey && !event.isComposing) {
       event.preventDefault();
       saveDraft();
